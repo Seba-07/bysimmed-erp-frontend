@@ -37,8 +37,8 @@ export default function Home() {
 
   return (
     <main className="container">
-      <h1 className="logo">bySIMMED — Hello PWA</h1>
-      <p className="subtitle">Validación de despliegue PWA + Backend</p>
+      <h1 className="logo">bySIMMED — ERP</h1>
+      <p className="subtitle">Sistema de Gestión Empresarial PWA</p>
 
       <button
         className="button"

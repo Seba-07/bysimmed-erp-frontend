@@ -1,7 +1,7 @@
 {
-  "name": "bySIMMED Hello PWA",
-  "short_name": "bySIMMED",
-  "description": "PWA de validación para bySIMMED",
+  "name": "bySIMMED ERP",
+  "short_name": "bySIMMED ERP",
+  "description": "Sistema ERP PWA para bySIMMED",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -28,6 +28,6 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["medical", "productivity"],
+  "categories": ["business", "productivity", "medical"],
   "lang": "es-ES"
 }

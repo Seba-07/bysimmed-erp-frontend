@@ -1,7 +1,7 @@
 {
-  "name": "bysimmed-hello-pwa-frontend",
+  "name": "bysimmed-erp-frontend",
   "version": "1.0.0",
-  "description": "Frontend PWA de validación para bySIMMED",
+  "description": "Frontend ERP PWA para bySIMMED",
   "private": true,
   "scripts": {
     "dev": "next dev",

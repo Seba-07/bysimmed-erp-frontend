@@ -1,6 +1,6 @@
-# bySIMMED Hello PWA - Frontend
+# bySIMMED ERP - Frontend
 
-Frontend PWA de validación para bySIMMED. Aplicación Next.js con capacidades de Progressive Web App instalable en iPad, iPhone, Android y PC.
+Frontend del Sistema ERP PWA para bySIMMED. Aplicación Next.js con capacidades de Progressive Web App instalable en iPad, iPhone, Android y PC.
 
 ## 🚀 Desarrollo Local
 
