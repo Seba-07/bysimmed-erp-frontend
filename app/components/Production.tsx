@@ -373,6 +373,9 @@ export default function Production() {
       console.log('📤 Creando orden:', payload)
       console.log('📋 numeroOrden:', numeroOrden)
 
+      // Alert temporal para debug
+      alert(`DEBUG:\nnumeroOrden: "${numeroOrden}"\ntipo: ${typeof numeroOrden}\nlongitud: ${numeroOrden?.length}\nen payload: "${payload.numeroOrden}"`)
+
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
