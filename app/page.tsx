@@ -5,6 +5,7 @@ import Inventory from './components/Inventory'
 import Materials from './components/Materials'
 import Components from './components/Components'
 import Models from './components/Models'
+import Planning from './components/Planning'
 
 type Tab = 'inventory' | 'planning' | 'materials' | 'components' | 'models'
 
@@ -56,7 +57,7 @@ export default function Home() {
       {/* Contenido según tab activo */}
       <div className="tab-content">
         {activeTab === 'inventory' && <Inventory />}
-        {activeTab === 'planning' && <div>Planificación (próximamente)</div>}
+        {activeTab === 'planning' && <Planning />}
         {activeTab === 'materials' && <Materials />}
         {activeTab === 'components' && <Components />}
         {activeTab === 'models' && <Models />}
