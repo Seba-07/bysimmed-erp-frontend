@@ -439,19 +439,129 @@ export default function Inventory() {
               </div>
             )}
 
-            {selectedItem.tipo === 'component' && editData.materiales && editData.materiales.length > 0 && (
+            {selectedItem.tipo === 'component' && (
               <div className="form-group">
-                <label>Materiales utilizados</label>
-                <div className="materials-list">
-                  {editData.materiales.map((mat: any, idx: number) => (
-                    <div key={idx} className="material-item">
-                      <span>{mat.material?.nombre || 'Material'}</span>
-                      <span className="cantidad-badge">
-                        {mat.cantidad} {mat.material?.unidad?.abreviatura || ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <label>Materiales del componente</label>
+                {editData.materiales && editData.materiales.length > 0 ? (
+                  <div className="editable-components-list">
+                    {editData.materiales.map((mat: any, idx: number) => {
+                      // Extraer el ID y nombre del material
+                      let materialId: string | null = null
+                      let materialName = 'Material desconocido'
+                      let materialUnit = ''
+
+                      const matId = mat['materialId'] || mat['material']
+
+                      if (matId && matId._id && matId.nombre) {
+                        materialId = matId._id
+                        materialName = matId.nombre
+                        materialUnit = matId.unidad?.abreviatura || ''
+                      } else if (matId && typeof matId === 'string') {
+                        materialId = matId
+                        const foundMat = allMaterials.find((m: any) => m._id === materialId)
+                        if (foundMat) {
+                          materialName = foundMat.nombre
+                          const unit = foundMat.unidad
+                          materialUnit = typeof unit === 'object' ? unit.abreviatura : ''
+                        }
+                      } else {
+                        const matIdFromStruct = mat['materialId']?._id || mat['material']?._id
+                        if (matIdFromStruct) {
+                          const foundMat = allMaterials.find((m: any) => m._id === matIdFromStruct)
+                          if (foundMat) {
+                            materialName = foundMat.nombre
+                            const unit = foundMat.unidad
+                            materialUnit = typeof unit === 'object' ? unit.abreviatura : ''
+                          }
+                        }
+                      }
+
+                      return (
+                        <div key={idx} className="editable-component-item">
+                          <div className="component-info">
+                            <span className="component-name-label">📦 {materialName} {materialUnit && `(${materialUnit})`}</span>
+                            <div className="component-quantity-control">
+                              <label>Cantidad:</label>
+                              <input
+                                type="number"
+                                className="inline-quantity-input"
+                                value={mat.cantidad}
+                                onChange={(e) => {
+                                  const newMaterials = [...editData.materiales]
+                                  newMaterials[idx] = { ...newMaterials[idx], cantidad: parseInt(e.target.value) || 1 }
+                                  setEditData({ ...editData, materiales: newMaterials })
+                                }}
+                                min="1"
+                                step="1"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="remove-component-inline-btn"
+                            onClick={() => {
+                              const newMaterials = editData.materiales.filter((_: any, i: number) => i !== idx)
+                              setEditData({ ...editData, materiales: newMaterials })
+                            }}
+                            title="Eliminar material"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="empty-components-msg">Este componente no tiene materiales</p>
+                )}
+
+                {/* Agregar nuevo material al componente */}
+                {allMaterials.length > 0 && (
+                  <div className="add-component-to-model">
+                    <select
+                      className="add-component-select"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const selectedMat = allMaterials.find((m: any) => m._id === e.target.value)
+                          if (selectedMat) {
+                            const newMaterials = editData.materiales || []
+                            // Evitar duplicados
+                            const exists = newMaterials.some((m: any) => {
+                              const existingId =
+                                (typeof m.materialId === 'string' ? m.materialId : m.materialId?._id) ||
+                                (typeof m.material === 'string' ? m.material : m.material?._id)
+                              return existingId === selectedMat._id
+                            })
+
+                            if (!exists) {
+                              setEditData({
+                                ...editData,
+                                materiales: [
+                                  ...newMaterials,
+                                  { materialId: selectedMat._id, material: selectedMat, cantidad: 1 }
+                                ]
+                              })
+                            } else {
+                              alert('Este material ya está en el componente')
+                            }
+                          }
+                          e.target.value = ''
+                        }
+                      }}
+                    >
+                      <option value="">+ Agregar material...</option>
+                      {allMaterials.map((m: any) => {
+                        const unit = m.unidad
+                        const unitText = typeof unit === 'object' && unit.abreviatura ? `(${unit.abreviatura})` : ''
+                        return (
+                          <option key={m._id} value={m._id}>
+                            {m.nombre} {unitText}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 
