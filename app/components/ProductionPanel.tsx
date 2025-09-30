@@ -345,10 +345,32 @@ export default function ProductionPanel() {
   }
 
   const closeComponentsModal = () => {
-    // Pause the model before closing
+    // Pause the model and all in-progress components before closing
     if (showComponentsModal) {
       const [orderId, productId] = showComponentsModal.split('-')
-      pauseModel(orderId, productId)
+      const timerKey = getTimerKey(orderId, productId)
+      const timer = timers[timerKey]
+
+      if (timer) {
+        // Pause any in-progress components
+        setTimers(prev => {
+          const updated = {
+            ...prev,
+            [timerKey]: {
+              ...prev[timerKey],
+              status: 'paused' as const,
+              startTime: null,
+              components: prev[timerKey].components.map(comp =>
+                comp.status === 'in_progress'
+                  ? { ...comp, status: 'paused' as const, startTime: null }
+                  : comp
+              )
+            }
+          }
+          saveTimersToStorage(updated)
+          return updated
+        })
+      }
     }
     setShowComponentsModal(null)
   }
@@ -530,6 +552,71 @@ export default function ProductionPanel() {
     return timer.components.every(c => c.status === 'completed')
   }
 
+  // Calendar rendering
+  const renderCalendar = () => {
+    const today = new Date()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+    const currentDay = today.getDate()
+
+    // Get first day of month and total days
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay()
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+
+    // Get orders deadlines for this month
+    const deadlines = orders.reduce((acc, order) => {
+      const deadline = new Date(order.fechaLimite)
+      if (deadline.getMonth() === currentMonth && deadline.getFullYear() === currentYear) {
+        const day = deadline.getDate()
+        if (!acc[day]) acc[day] = []
+        acc[day].push(order)
+      }
+      return acc
+    }, {} as Record<number, ProductionOrder[]>)
+
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+    const days = []
+
+    // Empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>)
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday = day === currentDay
+      const hasDeadline = deadlines[day]
+      const isPast = new Date(currentYear, currentMonth, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+      let className = 'calendar-day'
+      if (isToday) className += ' today'
+      if (isPast) className += ' past'
+      if (hasDeadline) className += ' has-deadline'
+
+      days.push(
+        <div key={day} className={className} title={hasDeadline ? `${hasDeadline.length} orden(es)` : ''}>
+          <span className="day-number">{day}</span>
+          {hasDeadline && <span className="deadline-indicator">{hasDeadline.length}</span>}
+        </div>
+      )
+    }
+
+    return (
+      <div className="calendar-widget">
+        <h3 className="calendar-header">{monthNames[currentMonth]} {currentYear}</h3>
+        <div className="calendar-weekdays">
+          {dayNames.map(name => <div key={name} className="weekday">{name}</div>)}
+        </div>
+        <div className="calendar-grid">
+          {days}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="section">
       <div className="production-panel-header">
@@ -546,7 +633,11 @@ export default function ProductionPanel() {
       {loading ? (
         <p>Cargando órdenes...</p>
       ) : orders.length > 0 ? (
-        <div className="production-cards-grid-compact">
+        <>
+          {/* Calendario */}
+          {renderCalendar()}
+
+          <div className="production-cards-grid-compact">
           {orders.map((order) => {
             const priority = getPriority(order.fechaLimite)
             const timeRemaining = getRemainingTime(order.fechaLimite)
@@ -647,6 +738,7 @@ export default function ProductionPanel() {
             )
           })}
         </div>
+        </>
       ) : (
         <div className="empty-state">
           <p>✅ No hay órdenes pendientes</p>

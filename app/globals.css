@@ -2133,6 +2133,108 @@ body {
   flex-wrap: wrap;
 }
 
+/* Calendar Widget */
+.calendar-widget {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+.calendar-header {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #3b82f6;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  padding: 0.25rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  border: none;
+}
+
+.calendar-day.today {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  font-weight: 700;
+}
+
+.calendar-day.today .day-number {
+  color: white;
+}
+
+.calendar-day.past {
+  opacity: 0.4;
+}
+
+.calendar-day.has-deadline {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.calendar-day.has-deadline.today {
+  background: linear-gradient(135deg, #3b82f6 50%, #dc2626 50%);
+}
+
+.day-number {
+  font-size: 0.875rem;
+  color: #e2e8f0;
+}
+
+.deadline-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #fbbf24;
+  color: #000;
+  font-size: 0.625rem;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .production-cards-grid-compact {
     grid-template-columns: 1fr;
@@ -2144,5 +2246,17 @@ body {
 
   .control-btn {
     width: 100%;
+  }
+
+  .calendar-widget {
+    max-width: 100%;
+  }
+
+  .calendar-day {
+    font-size: 0.75rem;
+  }
+
+  .day-number {
+    font-size: 0.75rem;
   }
 }
