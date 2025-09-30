@@ -6,7 +6,7 @@ interface Material {
   materialId: {
     _id: string
     nombre: string
-    unidad: string
+    unidad: string | { abreviatura: string; nombre: string }
   }
   cantidad: number
 }
@@ -437,11 +437,15 @@ export default function ProductionPanel() {
     if (order) {
       // Wait a bit for state to update, then check with updated timers
       setTimeout(() => {
-        // Check using the updated timers
+        // Check using the updated timers - need to check all units of each product
         const allCompleted = order.productos.every(prod => {
-          const key = getTimerKey(orderId, prod.itemId)
-          const timer = updatedTimers[key]
-          return timer && timer.status === 'completed'
+          // Check all units of this product
+          return Array.from({ length: prod.cantidad }, (_, unitIdx) => {
+            const productUnitId = `${prod.itemId}-${unitIdx}`
+            const key = getTimerKey(orderId, productUnitId)
+            const timer = updatedTimers[key]
+            return timer && timer.status === 'completed'
+          }).every(Boolean)
         })
 
         if (allCompleted) {
@@ -453,8 +457,12 @@ export default function ProductionPanel() {
             setTimers(prev => {
               const updated = { ...prev }
               order.productos.forEach(prod => {
-                const key = getTimerKey(orderId, prod.itemId)
-                delete updated[key]
+                // Remove all units of each product
+                Array.from({ length: prod.cantidad }, (_, unitIdx) => {
+                  const productUnitId = `${prod.itemId}-${unitIdx}`
+                  const key = getTimerKey(orderId, productUnitId)
+                  delete updated[key]
+                })
               })
               saveTimersToStorage(updated)
               return updated
@@ -689,18 +697,24 @@ export default function ProductionPanel() {
 
                 {/* Productos */}
                 <div className="products-compact">
-                  {order.productos.map((prod, idx) => {
-                    const timerKey = getTimerKey(order._id, prod.itemId)
-                    const timer = timers[timerKey]
+                  {order.productos.flatMap((prod, idx) =>
+                    // Crear una entrada por cada unidad del producto
+                    Array.from({ length: prod.cantidad }, (_, unitIdx) => {
+                      // Crear un ID único para cada unidad del producto
+                      const productUnitId = `${prod.itemId}-${unitIdx}`
+                      const timerKey = getTimerKey(order._id, productUnitId)
+                      const timer = timers[timerKey]
+                      // Crear un producto modificado con el ID único
+                      const productUnit = { ...prod, itemId: productUnitId }
 
-                    return (
-                      <div key={idx} className="product-item-compact">
-                        <div className="product-info-line">
-                          <span className="product-name-compact">
-                            {prod.itemType === 'Component' ? '🔧' : '🏭'} {prod.itemName} x{prod.cantidad}
-                          </span>
-                          <span className="timer-display">{formatTime(timer?.elapsedTime || 0)}</span>
-                        </div>
+                      return (
+                        <div key={`${idx}-${unitIdx}`} className="product-item-compact">
+                          <div className="product-info-line">
+                            <span className="product-name-compact">
+                              {prod.itemType === 'Component' ? '🔧' : '🏭'} {prod.itemName} {prod.cantidad > 1 ? `(${unitIdx + 1}/${prod.cantidad})` : ''}
+                            </span>
+                            <span className="timer-display">{formatTime(timer?.elapsedTime || 0)}</span>
+                          </div>
 
                         {/* Production controls - always show all buttons */}
                         <div className="production-controls">
@@ -711,7 +725,7 @@ export default function ProductionPanel() {
                               <>
                                 <button
                                   className="control-btn start-btn"
-                                  onClick={() => startModel(order, prod)}
+                                  onClick={() => startModel(order, productUnit)}
                                   title="Iniciar producción"
                                 >
                                   ▶️ Iniciar
@@ -737,7 +751,7 @@ export default function ProductionPanel() {
                               {timer.status === 'in_progress' ? (
                                 <button
                                   className="control-btn pause-btn"
-                                  onClick={() => pauseModel(order._id, prod.itemId)}
+                                  onClick={() => pauseModel(order._id, productUnitId)}
                                   title="Pausar"
                                 >
                                   ⏸️ Pausar
@@ -745,7 +759,7 @@ export default function ProductionPanel() {
                               ) : (
                                 <button
                                   className="control-btn resume-btn"
-                                  onClick={() => startModel(order, prod)}
+                                  onClick={() => startModel(order, productUnit)}
                                   title="Reanudar"
                                 >
                                   ▶️ Reanudar
@@ -753,16 +767,16 @@ export default function ProductionPanel() {
                               )}
                               <button
                                 className="control-btn reset-btn"
-                                onClick={() => resetModel(order._id, prod.itemId)}
+                                onClick={() => resetModel(order._id, productUnitId)}
                                 title="Reiniciar"
                               >
                                 🔄
                               </button>
                               <button
                                 className="control-btn finish-btn"
-                                onClick={() => completeModel(order._id, prod.itemId)}
-                                disabled={!allComponentsCompleted(order._id, prod.itemId)}
-                                title={allComponentsCompleted(order._id, prod.itemId) ? "Finalizar" : "Complete todos los componentes primero"}
+                                onClick={() => completeModel(order._id, productUnitId)}
+                                disabled={!allComponentsCompleted(order._id, productUnitId)}
+                                title={allComponentsCompleted(order._id, productUnitId) ? "Finalizar" : "Complete todos los componentes primero"}
                               >
                                 ✅ Finalizar
                               </button>
@@ -771,7 +785,8 @@ export default function ProductionPanel() {
                         </div>
                       </div>
                     )
-                  })}
+                  })
+                )}
                 </div>
               </div>
             )
@@ -810,11 +825,16 @@ export default function ProductionPanel() {
                     {componentDetails?.materiales && componentDetails.materiales.length > 0 && (
                       <div className="materials-compact">
                         <p className="materials-title">Materiales:</p>
-                        {componentDetails.materiales.map((mat, idx) => (
-                          <div key={idx} className="material-line">
-                            • {mat.materialId.nombre}: {mat.cantidad} {mat.materialId.unidad}
-                          </div>
-                        ))}
+                        {componentDetails.materiales.map((mat, idx) => {
+                          const materialName = mat.materialId?.nombre || 'Material'
+                          const unidad = mat.materialId?.unidad
+                          const materialUnit = typeof unidad === 'string' ? unidad : (unidad?.abreviatura || '')
+                          return (
+                            <div key={idx} className="material-line">
+                              • {materialName}: {mat.cantidad} {materialUnit}
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
 
