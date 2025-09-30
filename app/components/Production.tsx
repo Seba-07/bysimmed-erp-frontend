@@ -51,6 +51,8 @@ export default function Production() {
   const [showNewOrderModal, setShowNewOrderModal] = useState(false)
   const [selectedModelComponents, setSelectedModelComponents] = useState<any>(null)
 
+  const [nextOrderNumber, setNextOrderNumber] = useState<string>('')
+
   const [orderForm, setOrderForm] = useState({
     cliente: '',
     fechaLimite: '',
@@ -80,6 +82,12 @@ export default function Production() {
     loadInventory()
   }, [filterEstado])
 
+  const generateNextOrderNumber = (totalOrders: number) => {
+    const year = new Date().getFullYear()
+    const orderCount = totalOrders + 1
+    return `OF-${year}-${String(orderCount).padStart(4, '0')}`
+  }
+
   const loadOrders = async () => {
     setLoading(true)
     setError(null)
@@ -94,6 +102,9 @@ export default function Production() {
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
         setOrders(data.data)
+        // Generar el siguiente número de orden basado en el total
+        const nextNum = generateNextOrderNumber(data.data.length)
+        setNextOrderNumber(nextNum)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error cargando órdenes')
@@ -342,48 +353,16 @@ export default function Production() {
         return productData
       })
 
-      // Generar numeroOrden temporal porque el backend lo requiere antes del pre-save hook
-      const year = new Date().getFullYear()
-      const timestamp = Date.now()
-      const numeroOrden = `OF-${year}-TEMP-${timestamp}`
-
+      // Usar el número de orden generado automáticamente
       const payload = {
-        numeroOrden,
+        numeroOrden: nextOrderNumber,
         cliente: orderForm.cliente,
         fechaLimite: orderForm.fechaLimite,
         notas: orderForm.notas,
         productos: cleanedProducts
       }
 
-      // Mostrar payload en elemento temporal para que se pueda copiar
-      const debugDiv = document.createElement('div')
-      debugDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);color:#0f0;padding:20px;overflow:auto;z-index:99999;font-family:monospace;font-size:12px;white-space:pre-wrap;'
-
-      let debugInfo = `PAYLOAD COMPLETO:\n${JSON.stringify(payload, null, 2)}\n\n`
-
-      debugInfo += `CAMBIOS APLICADOS:\n`
-      debugInfo += `- numeroOrden: ${payload.numeroOrden}\n`
-      debugInfo += `- componentesSeleccionados: Array de IDs (no objetos)\n\n`
-
-      if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
-        debugInfo += `componentesSeleccionados tipo: ${typeof payload.productos[0].componentesSeleccionados}\n`
-        debugInfo += `componentesSeleccionados es array: ${Array.isArray(payload.productos[0].componentesSeleccionados)}\n`
-        debugInfo += `componentesSeleccionados longitud: ${payload.productos[0].componentesSeleccionados.length}\n`
-        debugInfo += `componentesSeleccionados: ${JSON.stringify(payload.productos[0].componentesSeleccionados)}\n\n`
-      }
-
-      debugInfo += '\n[Haz click en cualquier parte para cerrar y continuar]'
-      debugDiv.textContent = debugInfo
-      debugDiv.onclick = () => debugDiv.remove()
-      document.body.appendChild(debugDiv)
-
-      // Esperar a que el usuario cierre el debug
-      await new Promise(resolve => {
-        debugDiv.onclick = () => {
-          debugDiv.remove()
-          resolve(null)
-        }
-      })
+      console.log('📤 Creando orden:', payload)
 
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
@@ -607,6 +586,17 @@ export default function Production() {
           <div className="modal-content production-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Nueva Orden de Fabricación</h3>
             <form onSubmit={handleCreateOrder} className="production-form">
+              <div className="form-field">
+                <label>Número de Orden</label>
+                <input
+                  type="text"
+                  value={nextOrderNumber}
+                  disabled
+                  style={{ backgroundColor: '#1e293b', color: '#94a3b8', cursor: 'not-allowed' }}
+                  title="Generado automáticamente"
+                />
+              </div>
+
               <div className="form-field">
                 <label>Cliente *</label>
                 <input
