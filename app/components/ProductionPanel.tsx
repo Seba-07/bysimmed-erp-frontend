@@ -61,6 +61,8 @@ export default function ProductionPanel() {
   const [error, setError] = useState<string | null>(null)
   const [timers, setTimers] = useState<Record<string, ModelTimer>>({})
   const [showComponentsModal, setShowComponentsModal] = useState<string | null>(null)
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth())
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear())
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
@@ -552,22 +554,41 @@ export default function ProductionPanel() {
     return timer.components.every(c => c.status === 'completed')
   }
 
+  // Calendar navigation
+  const changeMonth = (direction: number) => {
+    let newMonth = calendarMonth + direction
+    let newYear = calendarYear
+
+    if (newMonth > 11) {
+      newMonth = 0
+      newYear++
+    } else if (newMonth < 0) {
+      newMonth = 11
+      newYear--
+    }
+
+    setCalendarMonth(newMonth)
+    setCalendarYear(newYear)
+  }
+
   // Calendar rendering
   const renderCalendar = () => {
     const today = new Date()
-    const currentMonth = today.getMonth()
-    const currentYear = today.getFullYear()
-    const currentDay = today.getDate()
+    const todayMonth = today.getMonth()
+    const todayYear = today.getFullYear()
+    const todayDay = today.getDate()
 
     // Get first day of month and total days
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay()
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay()
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate()
 
     // Get orders deadlines for this month
     const deadlines = orders.reduce((acc, order) => {
-      const deadline = new Date(order.fechaLimite)
-      if (deadline.getMonth() === currentMonth && deadline.getFullYear() === currentYear) {
-        const day = deadline.getDate()
+      // Parse date string and normalize to local date (ignore time/timezone)
+      const dateStr = order.fechaLimite.split('T')[0] // Get YYYY-MM-DD part only
+      const [year, month, day] = dateStr.split('-').map(Number)
+
+      if (month - 1 === calendarMonth && year === calendarYear) {
         if (!acc[day]) acc[day] = []
         acc[day].push(order)
       }
@@ -587,9 +608,9 @@ export default function ProductionPanel() {
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = day === currentDay
+      const isToday = day === todayDay && calendarMonth === todayMonth && calendarYear === todayYear
       const hasDeadline = deadlines[day]
-      const isPast = new Date(currentYear, currentMonth, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const isPast = new Date(calendarYear, calendarMonth, day) < new Date(todayYear, todayMonth, todayDay)
 
       let className = 'calendar-day'
       if (isToday) className += ' today'
@@ -606,7 +627,15 @@ export default function ProductionPanel() {
 
     return (
       <div className="calendar-widget">
-        <h3 className="calendar-header">{monthNames[currentMonth]} {currentYear}</h3>
+        <div className="calendar-header-with-nav">
+          <button className="calendar-nav-btn" onClick={() => changeMonth(-1)} title="Mes anterior">
+            ◀
+          </button>
+          <h3 className="calendar-header">{monthNames[calendarMonth]} {calendarYear}</h3>
+          <button className="calendar-nav-btn" onClick={() => changeMonth(1)} title="Mes siguiente">
+            ▶
+          </button>
+        </div>
         <div className="calendar-weekdays">
           {dayNames.map(name => <div key={name} className="weekday">{name}</div>)}
         </div>
@@ -634,9 +663,6 @@ export default function ProductionPanel() {
         <p>Cargando órdenes...</p>
       ) : orders.length > 0 ? (
         <>
-          {/* Calendario */}
-          {renderCalendar()}
-
           <div className="production-cards-grid-compact">
           {orders.map((order) => {
             const priority = getPriority(order.fechaLimite)
@@ -738,6 +764,9 @@ export default function ProductionPanel() {
             )
           })}
         </div>
+
+        {/* Calendario */}
+        {renderCalendar()}
         </>
       ) : (
         <div className="empty-state">
