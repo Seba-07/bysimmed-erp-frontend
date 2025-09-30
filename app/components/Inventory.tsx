@@ -465,10 +465,19 @@ export default function Inventory() {
                       let componentId: string | null = null
                       let componentName = 'Componente desconocido'
 
-                      console.log('=== DEBUG COMPONENTE ===')
-                      console.log('comp completo:', comp)
+                      // Alert solo en el primer componente para confirmar que el código se ejecuta
+                      if (idx === 0) {
+                        alert('CÓDIGO EJECUTÁNDOSE - Revisa la consola ahora')
+                      }
+
+                      console.log('=== DEBUG COMPONENTE [v2] ===')
+                      console.log('comp completo:', JSON.stringify(comp, null, 2))
                       console.log('comp.componenteId:', comp.componenteId)
                       console.log('typeof comp.componenteId:', typeof comp.componenteId)
+                      if (comp.componenteId && typeof comp.componenteId === 'object') {
+                        console.log('comp.componenteId.nombre:', comp.componenteId.nombre)
+                        console.log('comp.componenteId._id:', comp.componenteId._id)
+                      }
 
                       // El backend devuelve comp.componenteId como objeto poblado con _id y nombre
                       if (comp.componenteId) {
