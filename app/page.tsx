@@ -5,9 +5,9 @@ import Inventory from './components/Inventory'
 import Materials from './components/Materials'
 import Components from './components/Components'
 import Models from './components/Models'
-import Planning from './components/Planning'
+import Production from './components/Production'
 
-type Tab = 'inventory' | 'planning' | 'materials' | 'components' | 'models'
+type Tab = 'inventory' | 'production' | 'materials' | 'components' | 'models'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('inventory')
@@ -16,7 +16,7 @@ export default function Home() {
     // Detectar hash en la URL y cambiar de tab
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') as Tab
-      if (['inventory', 'planning', 'materials', 'components', 'models'].includes(hash)) {
+      if (['inventory', 'production', 'materials', 'components', 'models'].includes(hash)) {
         setActiveTab(hash)
       }
     }
@@ -47,17 +47,17 @@ export default function Home() {
           📊 Inventario
         </button>
         <button
-          className={`tab-button ${activeTab === 'planning' ? 'active' : ''}`}
-          onClick={() => setActiveTab('planning')}
+          className={`tab-button ${activeTab === 'production' ? 'active' : ''}`}
+          onClick={() => setActiveTab('production')}
         >
-          📅 Planificación
+          🏭 Órdenes de Fabricación
         </button>
       </div>
 
       {/* Contenido según tab activo */}
       <div className="tab-content">
         {activeTab === 'inventory' && <Inventory />}
-        {activeTab === 'planning' && <Planning />}
+        {activeTab === 'production' && <Production />}
         {activeTab === 'materials' && <Materials />}
         {activeTab === 'components' && <Components />}
         {activeTab === 'models' && <Models />}

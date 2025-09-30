@@ -45,24 +45,6 @@ export default function Inventory() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showNewItemModal, setShowNewItemModal] = useState(false)
-  const [showOrderModal, setShowOrderModal] = useState(false)
-  const [orderForm, setOrderForm] = useState<{
-    itemId: string
-    itemType: 'Component' | 'Model'
-    itemName: string
-    cantidad: number
-    fechaLimite: string
-    prioridad: 'baja' | 'media' | 'alta' | 'urgente'
-    notas: string
-  }>({
-    itemId: '',
-    itemType: 'Component',
-    itemName: '',
-    cantidad: 1,
-    fechaLimite: '',
-    prioridad: 'media',
-    notas: ''
-  })
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -106,46 +88,6 @@ export default function Inventory() {
       return `${unit.abreviatura}`
     }
     return ''
-  }
-
-  const openOrderModal = (item: Component | Model, type: 'Component' | 'Model') => {
-    // Set default fechaLimite to tomorrow
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const fechaLimiteStr = tomorrow.toISOString().split('T')[0]
-
-    setOrderForm({
-      itemId: item._id,
-      itemType: type,
-      itemName: item.nombre,
-      cantidad: 1,
-      fechaLimite: fechaLimiteStr,
-      prioridad: 'media',
-      notas: ''
-    })
-    setShowOrderModal(true)
-  }
-
-  const handleCreateOrder = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    try {
-      const res = await fetch(`${API_URL}/api/production/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderForm)
-      })
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-      const data = await res.json()
-      if (data.success) {
-        setShowOrderModal(false)
-        alert('Orden de fabricación creada exitosamente')
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creando orden')
-    }
   }
 
 
@@ -206,13 +148,6 @@ export default function Inventory() {
                     {component.descripcion && <p className="description">{component.descripcion}</p>}
                     <div className="item-details">
                       <span className="detail-badge">Stock: {component.stock}</span>
-                      <button
-                        className="order-btn"
-                        onClick={() => openOrderModal(component, 'Component')}
-                        title="Crear orden de fabricación"
-                      >
-                        📋 Orden
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -235,13 +170,6 @@ export default function Inventory() {
                     {model.descripcion && <p className="description">{model.descripcion}</p>}
                     <div className="item-details">
                       <span className="detail-badge">Stock: {model.stock}</span>
-                      <button
-                        className="order-btn"
-                        onClick={() => openOrderModal(model, 'Model')}
-                        title="Crear orden de fabricación"
-                      >
-                        📋 Orden
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -296,80 +224,6 @@ export default function Inventory() {
             <button onClick={() => setShowNewItemModal(false)} className="button secondary">
               Cancelar
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal para crear orden de fabricación */}
-      {showOrderModal && (
-        <div className="modal-overlay" onClick={() => setShowOrderModal(false)}>
-          <div className="modal-content order-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Crear Orden de Fabricación</h3>
-            <form onSubmit={handleCreateOrder} className="order-form">
-              <div className="form-field">
-                <label>Producto</label>
-                <input
-                  type="text"
-                  value={`${orderForm.itemName} (${orderForm.itemType === 'Component' ? 'Componente' : 'Modelo'})`}
-                  disabled
-                  className="disabled-input"
-                />
-              </div>
-
-              <div className="form-field">
-                <label>Cantidad *</label>
-                <input
-                  type="number"
-                  value={orderForm.cantidad}
-                  onChange={(e) => setOrderForm({...orderForm, cantidad: Number(e.target.value)})}
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label>Fecha límite *</label>
-                <input
-                  type="date"
-                  value={orderForm.fechaLimite}
-                  onChange={(e) => setOrderForm({...orderForm, fechaLimite: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label>Prioridad *</label>
-                <select
-                  value={orderForm.prioridad}
-                  onChange={(e) => setOrderForm({...orderForm, prioridad: e.target.value as any})}
-                  required
-                >
-                  <option value="baja">🟢 Baja</option>
-                  <option value="media">🟡 Media</option>
-                  <option value="alta">🟠 Alta</option>
-                  <option value="urgente">🔴 Urgente</option>
-                </select>
-              </div>
-
-              <div className="form-field">
-                <label>Notas (opcional)</label>
-                <textarea
-                  value={orderForm.notas}
-                  onChange={(e) => setOrderForm({...orderForm, notas: e.target.value})}
-                  placeholder="Instrucciones especiales o comentarios..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="button">
-                  Crear Orden
-                </button>
-                <button type="button" onClick={() => setShowOrderModal(false)} className="button secondary">
-                  Cancelar
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
