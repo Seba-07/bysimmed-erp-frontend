@@ -186,6 +186,36 @@ export default function ProductionPanel() {
     return components.find(c => c._id === componentId)
   }
 
+  const [componentDetailsCache, setComponentDetailsCache] = useState<Record<string, any>>({})
+
+  // Load component details when modal opens
+  useEffect(() => {
+    if (showComponentsModal) {
+      const timer = timers[showComponentsModal]
+      if (timer && timer.components) {
+        // Fetch details for all components in this timer
+        timer.components.forEach(async (comp) => {
+          if (!componentDetailsCache[comp.componentId]) {
+            try {
+              const res = await fetch(`${API_URL}/api/inventory/components/${comp.componentId}`)
+              if (!res.ok) return
+
+              const data = await res.json()
+              if (data.success && data.data) {
+                setComponentDetailsCache(prev => ({
+                  ...prev,
+                  [comp.componentId]: data.data
+                }))
+              }
+            } catch (err) {
+              console.error('Error cargando detalles del componente:', err)
+            }
+          }
+        })
+      }
+    }
+  }, [showComponentsModal, timers])
+
   const getTimerKey = (orderId: string, productId: string) => `${orderId}-${productId}`
 
   const saveTimersToStorage = (timersData: Record<string, ModelTimer>) => {
@@ -819,7 +849,8 @@ export default function ProductionPanel() {
 
             <div className="components-list-modal">
               {timers[showComponentsModal].components.map((comp, idx) => {
-                const componentDetails = getComponentDetails(comp.componentId)
+                // Use cached details if available, otherwise use basic details
+                const componentDetails = componentDetailsCache[comp.componentId] || getComponentDetails(comp.componentId)
                 const timer = timers[showComponentsModal]
                 const orderId = timer.orderId
                 const productId = timer.productId
@@ -835,7 +866,7 @@ export default function ProductionPanel() {
                     {componentDetails?.materiales && componentDetails.materiales.length > 0 && (
                       <div className="materials-compact">
                         <p className="materials-title">Materiales:</p>
-                        {componentDetails.materiales.map((mat, matIdx) => {
+                        {componentDetails.materiales.map((mat: any, matIdx: number) => {
                           // Handle different possible structures
                           const material = mat.materialId || mat.material
                           const materialName = material?.nombre || 'Material'
