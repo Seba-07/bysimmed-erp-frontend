@@ -175,43 +175,69 @@ export default function Production() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
           const data = await res.json()
+          console.log('🔍 Respuesta completa del backend:', JSON.stringify(data, null, 2))
+
           if (data.success) {
             setSelectedModelComponents(data.data)
 
+            // Verificar si hay componentes
+            const componentesArray = data.data?.componentes || []
+            console.log('📦 Array de componentes:', componentesArray)
+            console.log('📏 Longitud:', componentesArray.length)
+
+            if (componentesArray.length === 0) {
+              alert('El modelo no tiene componentes asociados')
+              setModelComponentsList([])
+              return
+            }
+
             // Auto-llenar la lista de componentes
-            const autoComponents = data.data.componentes.map((comp: any) => {
+            const autoComponents = componentesArray.map((comp: any, index: number) => {
+              console.log(`🔧 Procesando componente ${index}:`, JSON.stringify(comp, null, 2))
+
               // Usar notación de corchetes para evitar problemas de serialización
-              const compId = comp['componenteId']
+              const compId = comp['componentId'] || comp['componenteId']
+              console.log(`   - compId:`, compId)
+              console.log(`   - typeof compId:`, typeof compId)
+
               let componentName = 'Desconocido'
               let componentIdValue = null
 
-              if (compId && compId._id && compId.nombre) {
+              if (compId && typeof compId === 'object' && compId._id && compId.nombre) {
                 // Es un objeto con datos
                 componentIdValue = compId._id
                 componentName = compId.nombre
+                console.log(`   - Caso 1: Objeto poblado - ID: ${componentIdValue}, Nombre: ${componentName}`)
               } else if (compId && typeof compId === 'string') {
                 // Es un string ID, buscar en components
                 componentIdValue = compId
                 const foundComp = components.find(c => c._id === compId)
                 if (foundComp) {
                   componentName = foundComp.nombre
+                  console.log(`   - Caso 2: String ID encontrado - Nombre: ${componentName}`)
+                } else {
+                  console.log(`   - Caso 2: String ID NO encontrado en lista de componentes`)
                 }
+              } else {
+                console.log(`   - Caso 3: No se pudo procesar el componentId`)
               }
 
               return {
-                componenteId: componentIdValue || comp['componenteId'],
+                componenteId: componentIdValue || compId,
                 componentName: componentName,
                 cantidad: comp.cantidad
               }
             })
 
+            console.log('✅ Componentes procesados:', autoComponents)
             setModelComponentsList(autoComponents)
             setAvailableComponentsForModel(components.filter(c =>
               !autoComponents.some((ac: any) => ac.componenteId === c._id)
             ))
           }
         } catch (err) {
-          console.error('Error cargando componentes:', err)
+          console.error('❌ Error cargando componentes:', err)
+          alert(`Error al cargar componentes: ${err}`)
         }
       }
     }
@@ -325,7 +351,8 @@ export default function Production() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
-        console.error('Error del backend:', errorData)
+        console.error('❌ Error del backend completo:', JSON.stringify(errorData, null, 2))
+        alert(`Error del servidor:\n${JSON.stringify(errorData, null, 2)}`)
         throw new Error(`HTTP ${res.status}: ${errorData.message || 'Error desconocido'}`)
       }
 
