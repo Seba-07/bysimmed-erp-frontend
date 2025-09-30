@@ -249,19 +249,26 @@ export default function Components() {
             </button>
           </div>
 
-          {materialsList.map((item, index) => (
-            <div key={index} className="material-item">
-              <select
-                value={typeof item.materialId === 'string' ? item.materialId : item.materialId._id}
-                onChange={(e) => updateMaterial(index, 'materialId', e.target.value)}
-                disabled={submitting}
-              >
-                {availableMaterials.map(mat => (
-                  <option key={mat._id} value={mat._id}>
-                    {mat.nombre} ({mat.unidad})
-                  </option>
-                ))}
-              </select>
+          {materialsList.map((item, index) => {
+            const materialId = typeof item.materialId === 'string'
+              ? item.materialId
+              : (item.materialId && typeof item.materialId === 'object' && '_id' in item.materialId)
+                ? item.materialId._id
+                : ''
+
+            return (
+              <div key={index} className="material-item">
+                <select
+                  value={materialId}
+                  onChange={(e) => updateMaterial(index, 'materialId', e.target.value)}
+                  disabled={submitting}
+                >
+                  {availableMaterials.map(mat => (
+                    <option key={mat._id} value={mat._id}>
+                      {mat.nombre} ({mat.unidad})
+                    </option>
+                  ))}
+                </select>
               <input
                 type="number"
                 placeholder="Cantidad"
@@ -279,7 +286,8 @@ export default function Components() {
                 ✕
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="form-actions">
