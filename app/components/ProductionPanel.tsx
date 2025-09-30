@@ -3,7 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 
 interface Material {
-  materialId: {
+  materialId?: {
+    _id: string
+    nombre: string
+    unidad: string | { abreviatura: string; nombre: string }
+  }
+  material?: {
     _id: string
     nombre: string
     unidad: string | { abreviatura: string; nombre: string }
@@ -244,10 +249,15 @@ export default function ProductionPanel() {
     if (!timers[timerKey]) {
       let componentTimers: ComponentTimer[] = []
 
+      // Extract original itemId (remove unit suffix like "-0", "-1")
+      // Match pattern: ends with "-" followed by digits
+      const unitSuffixMatch = product.itemId.match(/^(.+)-(\d+)$/)
+      const fetchItemId = unitSuffixMatch ? unitSuffixMatch[1] : product.itemId
+
       // If it's a Model, fetch the model to get component quantities
       if (product.itemType === 'Model') {
         try {
-          const res = await fetch(`${API_URL}/api/inventory/models/${product.itemId}`)
+          const res = await fetch(`${API_URL}/api/inventory/models/${fetchItemId}`)
           if (res.ok) {
             const data = await res.json()
             if (data.success && data.data?.componentes) {
@@ -825,12 +835,21 @@ export default function ProductionPanel() {
                     {componentDetails?.materiales && componentDetails.materiales.length > 0 && (
                       <div className="materials-compact">
                         <p className="materials-title">Materiales:</p>
-                        {componentDetails.materiales.map((mat, idx) => {
-                          const materialName = mat.materialId?.nombre || 'Material'
-                          const unidad = mat.materialId?.unidad
-                          const materialUnit = typeof unidad === 'string' ? unidad : (unidad?.abreviatura || '')
+                        {componentDetails.materiales.map((mat, matIdx) => {
+                          // Handle different possible structures
+                          const material = mat.materialId || mat.material
+                          const materialName = material?.nombre || 'Material'
+                          const unidad = material?.unidad
+
+                          let materialUnit = ''
+                          if (typeof unidad === 'string') {
+                            materialUnit = unidad
+                          } else if (unidad && typeof unidad === 'object') {
+                            materialUnit = unidad.abreviatura || unidad.nombre || ''
+                          }
+
                           return (
-                            <div key={idx} className="material-line">
+                            <div key={matIdx} className="material-line">
                               • {materialName}: {mat.cantidad} {materialUnit}
                             </div>
                           )
