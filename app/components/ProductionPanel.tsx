@@ -67,9 +67,10 @@ export default function ProductionPanel() {
   useEffect(() => {
     loadActiveOrders()
     loadComponents()
+    loadTimersFromStorage()
   }, [])
 
-  // Update timers every second
+  // Update timers every second and save to storage
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setTimers(prev => {
@@ -89,6 +90,8 @@ export default function ProductionPanel() {
             }
           })
         })
+        // Save to localStorage
+        saveTimersToStorage(updated)
         return updated
       })
     }, 1000)
@@ -177,6 +180,39 @@ export default function ProductionPanel() {
 
   const getTimerKey = (orderId: string, productId: string) => `${orderId}-${productId}`
 
+  const saveTimersToStorage = (timersData: Record<string, ModelTimer>) => {
+    try {
+      localStorage.setItem('production_timers', JSON.stringify(timersData))
+    } catch (err) {
+      console.error('Error guardando timers:', err)
+    }
+  }
+
+  const loadTimersFromStorage = () => {
+    try {
+      const saved = localStorage.getItem('production_timers')
+      if (saved) {
+        const parsed: Record<string, ModelTimer> = JSON.parse(saved)
+        // Recalculate elapsed time for in_progress timers
+        Object.keys(parsed).forEach(key => {
+          const timer = parsed[key]
+          if (timer.status === 'in_progress' && timer.startTime) {
+            timer.elapsedTime = Math.floor((Date.now() - timer.startTime) / 1000)
+          }
+          // Update component timers
+          timer.components.forEach((comp: ComponentTimer) => {
+            if (comp.status === 'in_progress' && comp.startTime) {
+              comp.elapsedTime = Math.floor((Date.now() - comp.startTime) / 1000)
+            }
+          })
+        })
+        setTimers(parsed)
+      }
+    } catch (err) {
+      console.error('Error cargando timers:', err)
+    }
+  }
+
   const updateOrderStatus = async (orderId: string, estado: 'en_proceso' | 'completada') => {
     try {
       const res = await fetch(`${API_URL}/api/production/orders/${orderId}`, {
@@ -214,17 +250,21 @@ export default function ProductionPanel() {
         }
       })
 
-      setTimers(prev => ({
-        ...prev,
-        [timerKey]: {
-          orderId: order._id,
-          productId: product.itemId,
-          status: 'in_progress',
-          elapsedTime: 0,
-          startTime: Date.now(),
-          components: componentTimers
+      setTimers(prev => {
+        const updated = {
+          ...prev,
+          [timerKey]: {
+            orderId: order._id,
+            productId: product.itemId,
+            status: 'in_progress' as const,
+            elapsedTime: 0,
+            startTime: Date.now(),
+            components: componentTimers
+          }
         }
-      }))
+        saveTimersToStorage(updated)
+        return updated
+      })
 
       // Update order status to 'en_proceso' if it's still 'activa'
       if (order.estado === 'activa') {
@@ -235,28 +275,36 @@ export default function ProductionPanel() {
       setShowComponentsModal(timerKey)
     } else {
       // Resume timer
-      setTimers(prev => ({
-        ...prev,
-        [timerKey]: {
-          ...prev[timerKey],
-          status: 'in_progress',
-          startTime: Date.now() - (prev[timerKey].elapsedTime * 1000)
+      setTimers(prev => {
+        const updated = {
+          ...prev,
+          [timerKey]: {
+            ...prev[timerKey],
+            status: 'in_progress' as const,
+            startTime: Date.now() - (prev[timerKey].elapsedTime * 1000)
+          }
         }
-      }))
+        saveTimersToStorage(updated)
+        return updated
+      })
       setShowComponentsModal(timerKey)
     }
   }
 
   const pauseModel = (orderId: string, productId: string) => {
     const timerKey = getTimerKey(orderId, productId)
-    setTimers(prev => ({
-      ...prev,
-      [timerKey]: {
-        ...prev[timerKey],
-        status: 'paused',
-        startTime: null
+    setTimers(prev => {
+      const updated = {
+        ...prev,
+        [timerKey]: {
+          ...prev[timerKey],
+          status: 'paused' as const,
+          startTime: null
+        }
       }
-    }))
+      saveTimersToStorage(updated)
+      return updated
+    })
   }
 
   const resetModel = (orderId: string, productId: string) => {
@@ -265,21 +313,25 @@ export default function ProductionPanel() {
     const timerKey = getTimerKey(orderId, productId)
     const timer = timers[timerKey]
 
-    setTimers(prev => ({
-      ...prev,
-      [timerKey]: {
-        ...timer,
-        status: 'pending',
-        elapsedTime: 0,
-        startTime: null,
-        components: timer.components.map(c => ({
-          ...c,
-          status: 'pending',
+    setTimers(prev => {
+      const updated = {
+        ...prev,
+        [timerKey]: {
+          ...timer,
+          status: 'pending' as const,
           elapsedTime: 0,
-          startTime: null
-        }))
+          startTime: null,
+          components: timer.components.map(c => ({
+            ...c,
+            status: 'pending' as const,
+            elapsedTime: 0,
+            startTime: null
+          }))
+        }
       }
-    }))
+      saveTimersToStorage(updated)
+      return updated
+    })
   }
 
   const allProductsCompletedInOrder = (orderId: string, orderProducts: OrderProduct[]) => {
@@ -292,14 +344,18 @@ export default function ProductionPanel() {
 
   const completeModel = async (orderId: string, productId: string) => {
     const timerKey = getTimerKey(orderId, productId)
-    setTimers(prev => ({
-      ...prev,
-      [timerKey]: {
-        ...prev[timerKey],
-        status: 'completed',
-        startTime: null
+    setTimers(prev => {
+      const updated = {
+        ...prev,
+        [timerKey]: {
+          ...prev[timerKey],
+          status: 'completed' as const,
+          startTime: null
+        }
       }
-    }))
+      saveTimersToStorage(updated)
+      return updated
+    })
     setShowComponentsModal(null)
 
     // Check if all products in the order are completed
@@ -311,8 +367,18 @@ export default function ProductionPanel() {
         if (allCompleted) {
           if (confirm(`✅ Todos los productos de la orden ${order.numeroOrden} han sido fabricados.\n\n¿Confirmar que la orden está completada?`)) {
             updateOrderStatus(orderId, 'completada')
-            // Remove order from view
+            // Remove order from view and clean up timers
             setOrders(prev => prev.filter(o => o._id !== orderId))
+            // Remove timers for this order from storage
+            setTimers(prev => {
+              const updated = { ...prev }
+              order.productos.forEach(prod => {
+                const key = getTimerKey(orderId, prod.itemId)
+                delete updated[key]
+              })
+              saveTimersToStorage(updated)
+              return updated
+            })
           }
         }
       }, 100)
@@ -323,17 +389,19 @@ export default function ProductionPanel() {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
-      return {
+      const updated = {
         ...prev,
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
             c.componentId === componentId
-              ? { ...c, status: 'in_progress', startTime: Date.now() - (c.elapsedTime * 1000) }
+              ? { ...c, status: 'in_progress' as const, startTime: Date.now() - (c.elapsedTime * 1000) }
               : c
           )
         }
       }
+      saveTimersToStorage(updated)
+      return updated
     })
   }
 
@@ -341,17 +409,19 @@ export default function ProductionPanel() {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
-      return {
+      const updated = {
         ...prev,
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
             c.componentId === componentId
-              ? { ...c, status: 'paused', startTime: null }
+              ? { ...c, status: 'paused' as const, startTime: null }
               : c
           )
         }
       }
+      saveTimersToStorage(updated)
+      return updated
     })
   }
 
@@ -361,17 +431,19 @@ export default function ProductionPanel() {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
-      return {
+      const updated = {
         ...prev,
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
             c.componentId === componentId
-              ? { ...c, status: 'pending', elapsedTime: 0, startTime: null }
+              ? { ...c, status: 'pending' as const, elapsedTime: 0, startTime: null }
               : c
           )
         }
       }
+      saveTimersToStorage(updated)
+      return updated
     })
   }
 
@@ -379,17 +451,19 @@ export default function ProductionPanel() {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
-      return {
+      const updated = {
         ...prev,
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
             c.componentId === componentId
-              ? { ...c, status: 'completed', startTime: null }
+              ? { ...c, status: 'completed' as const, startTime: null }
               : c
           )
         }
       }
+      saveTimersToStorage(updated)
+      return updated
     })
   }
 
