@@ -255,7 +255,9 @@ export default function Models() {
                 value={typeof item.componentId === 'string' ? item.componentId : item.componentId._id}
                 onChange={(e) => updateComponent(index, 'componentId', e.target.value)}
                 disabled={submitting}
+                required
               >
+                <option value="">Seleccionar componente...</option>
                 {availableComponents.map(comp => (
                   <option key={comp._id} value={comp._id}>
                     {comp.nombre}

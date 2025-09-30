@@ -263,7 +263,9 @@ export default function Components() {
                   value={materialId}
                   onChange={(e) => updateMaterial(index, 'materialId', e.target.value)}
                   disabled={submitting}
+                  required
                 >
+                  <option value="">Seleccionar material...</option>
                   {availableMaterials.map(mat => {
                     let unidad = ''
                     if (typeof mat.unidad === 'string') {
