@@ -263,11 +263,20 @@ export default function Components() {
                   onChange={(e) => updateMaterial(index, 'materialId', e.target.value)}
                   disabled={submitting}
                 >
-                  {availableMaterials.map(mat => (
-                    <option key={mat._id} value={mat._id}>
-                      {mat.nombre} ({mat.unidad})
-                    </option>
-                  ))}
+                  {availableMaterials.map(mat => {
+                    let unidad = ''
+                    if (typeof mat.unidad === 'string') {
+                      unidad = mat.unidad
+                    } else if (mat.unidad && typeof mat.unidad === 'object') {
+                      const unidadObj = mat.unidad as any
+                      unidad = unidadObj.abreviatura || unidadObj.nombre || ''
+                    }
+                    return (
+                      <option key={mat._id} value={mat._id}>
+                        {mat.nombre} {unidad ? `(${unidad})` : ''}
+                      </option>
+                    )
+                  })}
                 </select>
               <input
                 type="number"

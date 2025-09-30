@@ -465,6 +465,11 @@ export default function Inventory() {
                       let componentId: string | null = null
                       let componentName = 'Componente'
 
+                      // Debug temporal
+                      if (idx === 0) {
+                        alert(`Estructura comp: ${JSON.stringify(comp, null, 2)}\n\nallComponents count: ${allComponents.length}`)
+                      }
+
                       // El backend devuelve comp.componenteId como objeto poblado
                       if (comp.componenteId) {
                         if (typeof comp.componenteId === 'object' && comp.componenteId._id) {
