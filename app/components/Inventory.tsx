@@ -465,20 +465,33 @@ export default function Inventory() {
                       let componentId: string | null = null
                       let componentName = 'Componente desconocido'
 
+                      console.log('=== DEBUG COMPONENTE ===')
+                      console.log('comp completo:', comp)
+                      console.log('comp.componenteId:', comp.componenteId)
+                      console.log('typeof comp.componenteId:', typeof comp.componenteId)
+
                       // El backend devuelve comp.componenteId como objeto poblado con _id y nombre
                       if (comp.componenteId) {
                         if (typeof comp.componenteId === 'object' && comp.componenteId._id) {
                           componentId = comp.componenteId._id
                           componentName = comp.componenteId.nombre || 'Componente sin nombre'
+                          console.log('✓ Extraído de objeto - ID:', componentId, 'Nombre:', componentName)
                         } else if (typeof comp.componenteId === 'string') {
                           componentId = comp.componenteId
+                          console.log('Buscando string ID:', componentId, 'en', allComponents.length, 'componentes')
                           // Si es string, buscar en allComponents
                           const foundComp = allComponents.find((c: any) => c._id === componentId)
                           if (foundComp) {
                             componentName = foundComp.nombre
+                            console.log('✓ Encontrado en allComponents:', componentName)
+                          } else {
+                            console.log('✗ NO encontrado en allComponents')
                           }
                         }
                       }
+
+                      console.log('componentName FINAL:', componentName)
+                      console.log('=======================\n')
 
                       return (
                         <div key={idx} className="editable-component-item">
