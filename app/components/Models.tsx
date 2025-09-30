@@ -92,11 +92,16 @@ export default function Models() {
   }
 
   const addComponent = () => {
-    if (availableComponents.length === 0) {
+    if (!availableComponents || availableComponents.length === 0) {
       alert('No hay componentes disponibles. Crea componentes primero.')
       return
     }
-    setComponentsList([...componentsList, { componentId: availableComponents[0]._id, cantidad: 1 }])
+    const firstComponent = availableComponents[0]
+    if (!firstComponent || !firstComponent._id) {
+      alert('Error: Componente inválido')
+      return
+    }
+    setComponentsList([...componentsList, { componentId: firstComponent._id, cantidad: 1 }])
   }
 
   const removeComponent = (index: number) => {
@@ -260,10 +265,10 @@ export default function Models() {
                 type="number"
                 placeholder="Cantidad"
                 value={item.cantidad}
-                onChange={(e) => updateComponent(index, 'cantidad', Number(e.target.value))}
+                onChange={(e) => updateComponent(index, 'cantidad', parseInt(e.target.value) || 0)}
                 disabled={submitting}
-                min="0"
-                step="0.01"
+                min="1"
+                step="1"
               />
               <button
                 type="button"

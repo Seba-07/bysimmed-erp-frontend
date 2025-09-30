@@ -93,11 +93,16 @@ export default function Components() {
   }
 
   const addMaterial = () => {
-    if (availableMaterials.length === 0) {
+    if (!availableMaterials || availableMaterials.length === 0) {
       alert('No hay materiales disponibles. Crea materiales primero.')
       return
     }
-    setMaterialsList([...materialsList, { materialId: availableMaterials[0]._id, cantidad: 1 }])
+    const firstMaterial = availableMaterials[0]
+    if (!firstMaterial || !firstMaterial._id) {
+      alert('Error: Material inválido')
+      return
+    }
+    setMaterialsList([...materialsList, { materialId: firstMaterial._id, cantidad: 1 }])
   }
 
   const removeMaterial = (index: number) => {

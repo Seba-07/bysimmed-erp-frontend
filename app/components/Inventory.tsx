@@ -455,19 +455,91 @@ export default function Inventory() {
               </div>
             )}
 
-            {selectedItem.tipo === 'model' && editData.componentes && editData.componentes.length > 0 && (
+            {selectedItem.tipo === 'model' && (
               <div className="form-group">
                 <label>Componentes del modelo</label>
-                <div className="materials-list">
-                  {editData.componentes.map((comp: any, idx: number) => (
-                    <div key={idx} className="material-item">
-                      <span>{comp.componente?.nombre || 'Componente'}</span>
-                      <span className="cantidad-badge">
-                        {comp.cantidad}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {editData.componentes && editData.componentes.length > 0 ? (
+                  <div className="editable-components-list">
+                    {editData.componentes.map((comp: any, idx: number) => {
+                      const componentId = comp.componenteId || comp.componente?._id
+                      const componentName = comp.componente?.nombre || allComponents.find((c: any) => c._id === componentId)?.nombre || 'Componente'
+
+                      return (
+                        <div key={idx} className="editable-component-item">
+                          <div className="component-info">
+                            <span className="component-name-label">{componentName}</span>
+                            <div className="component-quantity-control">
+                              <label>Cantidad:</label>
+                              <input
+                                type="number"
+                                className="inline-quantity-input"
+                                value={comp.cantidad}
+                                onChange={(e) => {
+                                  const newComponents = [...editData.componentes]
+                                  newComponents[idx] = { ...newComponents[idx], cantidad: parseInt(e.target.value) || 1 }
+                                  setEditData({ ...editData, componentes: newComponents })
+                                }}
+                                min="1"
+                                step="1"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="remove-component-inline-btn"
+                            onClick={() => {
+                              const newComponents = editData.componentes.filter((_: any, i: number) => i !== idx)
+                              setEditData({ ...editData, componentes: newComponents })
+                            }}
+                            title="Eliminar componente"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="empty-components-msg">Este modelo no tiene componentes</p>
+                )}
+
+                {/* Agregar nuevo componente al modelo */}
+                {allComponents.length > 0 && (
+                  <div className="add-component-to-model">
+                    <select
+                      className="add-component-select"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const selectedComp = allComponents.find((c: any) => c._id === e.target.value)
+                          if (selectedComp) {
+                            const newComponents = editData.componentes || []
+                            // Evitar duplicados
+                            const exists = newComponents.some((c: any) =>
+                              (c.componenteId || c.componente?._id) === selectedComp._id
+                            )
+                            if (!exists) {
+                              setEditData({
+                                ...editData,
+                                componentes: [
+                                  ...newComponents,
+                                  { componenteId: selectedComp._id, componente: selectedComp, cantidad: 1 }
+                                ]
+                              })
+                            } else {
+                              alert('Este componente ya está en el modelo')
+                            }
+                          }
+                          e.target.value = ''
+                        }
+                      }}
+                    >
+                      <option value="">+ Agregar componente...</option>
+                      {allComponents.map((c: any) => (
+                        <option key={c._id} value={c._id}>{c.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 
