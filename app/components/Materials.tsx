@@ -42,8 +42,7 @@ export default function Materials() {
     nombre: '',
     descripcion: '',
     unidad: '',
-    stock: 0,
-    precioUnitario: 0
+    stock: 0
   })
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -142,7 +141,7 @@ export default function Materials() {
 
       const data: MaterialResponse = await res.json()
       if (data.success) {
-        setForm({ nombre: '', descripcion: '', unidad: '', stock: 0, precioUnitario: 0 })
+        setForm({ nombre: '', descripcion: '', unidad: '', stock: 0 })
         setEditingId(null)
         loadMaterials()
       }
@@ -158,8 +157,7 @@ export default function Materials() {
       nombre: material.nombre,
       descripcion: material.descripcion || '',
       unidad: typeof material.unidad === 'string' ? material.unidad : material.unidad._id,
-      stock: material.stock,
-      precioUnitario: material.precioUnitario
+      stock: material.stock
     })
     setEditingId(material._id)
   }
@@ -180,7 +178,7 @@ export default function Materials() {
   }
 
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', unidad: '', stock: 0, precioUnitario: 0 })
+    setForm({ nombre: '', descripcion: '', unidad: '', stock: 0 })
     setEditingId(null)
   }
 
@@ -279,18 +277,6 @@ export default function Materials() {
             step="0.01"
           />
         </div>
-        <div className="form-field">
-          <label>Precio unitario</label>
-          <input
-            type="number"
-            placeholder="0.00"
-            value={form.precioUnitario}
-            onChange={(e) => setForm({...form, precioUnitario: Number(e.target.value)})}
-            disabled={submitting}
-            min="0"
-            step="0.01"
-          />
-        </div>
         <div className="form-actions">
           <button type="submit" disabled={submitting} className="button">
             {submitting ? 'Guardando...' : editingId ? 'Actualizar' : 'Agregar Material'}
@@ -331,7 +317,6 @@ export default function Materials() {
               <div className="card-details">
                 <p><strong>Unidad:</strong> {getUnitDisplay(material.unidad)}</p>
                 <p><strong>Stock:</strong> {material.stock}</p>
-                <p><strong>Precio:</strong> ${material.precioUnitario.toFixed(2)}</p>
                 <p className="date">📅 {new Date(material.fechaCreacion).toLocaleDateString()}</p>
               </div>
             </div>

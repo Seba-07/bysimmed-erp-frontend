@@ -90,9 +90,6 @@ export default function Inventory() {
     return ''
   }
 
-  const getTotalValue = (items: any[]) => {
-    return items.reduce((sum, item) => sum + (item.stock * item.precioUnitario), 0)
-  }
 
   return (
     <div className="section">
@@ -120,9 +117,6 @@ export default function Inventory() {
           <div className="inventory-category">
             <div className="category-header">
               <h3>📦 Materiales ({materials.length})</h3>
-              <p className="category-value">
-                Valor total: ${getTotalValue(materials).toFixed(2)}
-              </p>
             </div>
             {materials.length > 0 ? (
               <div className="inventory-grid">
@@ -132,7 +126,6 @@ export default function Inventory() {
                     {material.descripcion && <p className="description">{material.descripcion}</p>}
                     <div className="item-details">
                       <span className="detail-badge">Stock: {material.stock} {getUnitDisplay(material.unidad)}</span>
-                      <span className="detail-badge">${material.precioUnitario.toFixed(2)}</span>
                     </div>
                   </div>
                 ))}
@@ -146,9 +139,6 @@ export default function Inventory() {
           <div className="inventory-category">
             <div className="category-header">
               <h3>🔧 Componentes ({components.length})</h3>
-              <p className="category-value">
-                Valor total: ${getTotalValue(components).toFixed(2)}
-              </p>
             </div>
             {components.length > 0 ? (
               <div className="inventory-grid">
@@ -158,7 +148,6 @@ export default function Inventory() {
                     {component.descripcion && <p className="description">{component.descripcion}</p>}
                     <div className="item-details">
                       <span className="detail-badge">Stock: {component.stock}</span>
-                      <span className="detail-badge">${component.precioUnitario.toFixed(2)}</span>
                     </div>
                   </div>
                 ))}
@@ -172,9 +161,6 @@ export default function Inventory() {
           <div className="inventory-category">
             <div className="category-header">
               <h3>🏭 Modelos ({models.length})</h3>
-              <p className="category-value">
-                Valor total: ${getTotalValue(models).toFixed(2)}
-              </p>
             </div>
             {models.length > 0 ? (
               <div className="inventory-grid">
@@ -184,7 +170,6 @@ export default function Inventory() {
                     {model.descripcion && <p className="description">{model.descripcion}</p>}
                     <div className="item-details">
                       <span className="detail-badge">Stock: {model.stock}</span>
-                      <span className="detail-badge">${model.precioUnitario.toFixed(2)}</span>
                     </div>
                   </div>
                 ))}

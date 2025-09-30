@@ -6,7 +6,7 @@ import Materials from './components/Materials'
 import Components from './components/Components'
 import Models from './components/Models'
 
-type Tab = 'inventory' | 'materials' | 'components' | 'models'
+type Tab = 'inventory' | 'planning' | 'materials' | 'components' | 'models'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('inventory')
@@ -15,7 +15,7 @@ export default function Home() {
     // Detectar hash en la URL y cambiar de tab
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') as Tab
-      if (['inventory', 'materials', 'components', 'models'].includes(hash)) {
+      if (['inventory', 'planning', 'materials', 'components', 'models'].includes(hash)) {
         setActiveTab(hash)
       }
     }
@@ -46,28 +46,17 @@ export default function Home() {
           📊 Inventario
         </button>
         <button
-          className={`tab-button ${activeTab === 'materials' ? 'active' : ''}`}
-          onClick={() => setActiveTab('materials')}
+          className={`tab-button ${activeTab === 'planning' ? 'active' : ''}`}
+          onClick={() => setActiveTab('planning')}
         >
-          📦 Materiales
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'components' ? 'active' : ''}`}
-          onClick={() => setActiveTab('components')}
-        >
-          🔧 Componentes
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'models' ? 'active' : ''}`}
-          onClick={() => setActiveTab('models')}
-        >
-          🏭 Modelos
+          📅 Planificación
         </button>
       </div>
 
       {/* Contenido según tab activo */}
       <div className="tab-content">
         {activeTab === 'inventory' && <Inventory />}
+        {activeTab === 'planning' && <div>Planificación (próximamente)</div>}
         {activeTab === 'materials' && <Materials />}
         {activeTab === 'components' && <Components />}
         {activeTab === 'models' && <Models />}
