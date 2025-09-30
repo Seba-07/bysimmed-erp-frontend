@@ -134,11 +134,6 @@ export default function Inventory() {
 
       if (data.success) {
         const fullItem = { ...data.data, tipo: item.tipo }
-        console.log('Item cargado:', fullItem) // Debug
-        console.log('allComponents disponibles:', allComponents) // Debug
-        if (fullItem.componentes) {
-          console.log('Componentes del modelo:', fullItem.componentes) // Debug
-        }
         setSelectedItem(fullItem)
         setEditData(fullItem)
         setShowDetailModal(true)
@@ -466,43 +461,27 @@ export default function Inventory() {
                 {editData.componentes && editData.componentes.length > 0 ? (
                   <div className="editable-components-list">
                     {editData.componentes.map((comp: any, idx: number) => {
-                      // Extraer el ID del componente de diferentes formatos posibles
+                      // Extraer el ID y nombre del componente
                       let componentId: string | null = null
-                      let componentName = 'Componente desconocido'
+                      let componentName = 'Componente'
 
-                      console.log(`Procesando componente ${idx}:`, comp) // Debug
-
-                      if (typeof comp.componenteId === 'string') {
-                        componentId = comp.componenteId
-                        console.log('componenteId es string:', componentId) // Debug
-                      } else if (comp.componenteId && typeof comp.componenteId === 'object') {
-                        componentId = comp.componenteId._id
-                        componentName = comp.componenteId.nombre || componentName
-                        console.log('componenteId es objeto:', componentId, componentName) // Debug
-                      } else if (comp.componente) {
-                        if (typeof comp.componente === 'string') {
-                          componentId = comp.componente
-                          console.log('componente es string:', componentId) // Debug
-                        } else {
-                          componentId = comp.componente._id
-                          componentName = comp.componente.nombre || componentName
-                          console.log('componente es objeto:', componentId, componentName) // Debug
+                      // El backend devuelve comp.componenteId como objeto poblado
+                      if (comp.componenteId) {
+                        if (typeof comp.componenteId === 'object' && comp.componenteId._id) {
+                          componentId = comp.componenteId._id
+                          componentName = comp.componenteId.nombre || componentName
+                        } else if (typeof comp.componenteId === 'string') {
+                          componentId = comp.componenteId
                         }
                       }
 
-                      // Buscar el nombre en allComponents si no lo tenemos
-                      if (componentId && componentName === 'Componente desconocido') {
-                        console.log('Buscando en allComponents con ID:', componentId) // Debug
+                      // Fallback: buscar en la lista de componentes cargados
+                      if (componentId && componentName === 'Componente' && allComponents.length > 0) {
                         const foundComp = allComponents.find((c: any) => c._id === componentId)
                         if (foundComp) {
                           componentName = foundComp.nombre
-                          console.log('Componente encontrado:', componentName) // Debug
-                        } else {
-                          console.log('Componente NO encontrado en allComponents') // Debug
                         }
                       }
-
-                      console.log('Nombre final:', componentName) // Debug
 
                       return (
                         <div key={idx} className="editable-component-item">
