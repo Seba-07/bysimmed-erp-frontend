@@ -336,7 +336,7 @@ export default function Production() {
         // Solo agregar componentesSeleccionados si existen y no está vacío
         if (prod.componentesSeleccionados && prod.componentesSeleccionados.length > 0) {
           productData.componentesSeleccionados = prod.componentesSeleccionados.map(comp => ({
-            componenteId: comp.componenteId,
+            componentId: comp.componenteId, // Backend usa 'componentId' sin 'e'
             cantidad: comp.cantidad
           }))
         }
