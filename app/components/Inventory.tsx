@@ -463,28 +463,20 @@ export default function Inventory() {
                     {editData.componentes.map((comp: any, idx: number) => {
                       // Extraer el ID y nombre del componente
                       let componentId: string | null = null
-                      let componentName = 'Componente'
+                      let componentName = 'Componente desconocido'
 
-                      // Debug temporal
-                      if (idx === 0) {
-                        alert(`Estructura comp: ${JSON.stringify(comp, null, 2)}\n\nallComponents count: ${allComponents.length}`)
-                      }
-
-                      // El backend devuelve comp.componenteId como objeto poblado
+                      // El backend devuelve comp.componenteId como objeto poblado con _id y nombre
                       if (comp.componenteId) {
                         if (typeof comp.componenteId === 'object' && comp.componenteId._id) {
                           componentId = comp.componenteId._id
-                          componentName = comp.componenteId.nombre || componentName
+                          componentName = comp.componenteId.nombre || 'Componente sin nombre'
                         } else if (typeof comp.componenteId === 'string') {
                           componentId = comp.componenteId
-                        }
-                      }
-
-                      // Fallback: buscar en la lista de componentes cargados
-                      if (componentId && componentName === 'Componente' && allComponents.length > 0) {
-                        const foundComp = allComponents.find((c: any) => c._id === componentId)
-                        if (foundComp) {
-                          componentName = foundComp.nombre
+                          // Si es string, buscar en allComponents
+                          const foundComp = allComponents.find((c: any) => c._id === componentId)
+                          if (foundComp) {
+                            componentName = foundComp.nombre
+                          }
                         }
                       }
 
