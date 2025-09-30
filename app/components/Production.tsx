@@ -334,24 +334,19 @@ export default function Production() {
         }
 
         // Solo agregar componentesSeleccionados si existen y no está vacío
+        // IMPORTANTE: Backend espera array de ObjectIds, NO objetos con {componentId, cantidad}
         if (prod.componentesSeleccionados && prod.componentesSeleccionados.length > 0) {
-          productData.componentesSeleccionados = prod.componentesSeleccionados.map(comp => ({
-            componentId: comp.componenteId, // Backend usa 'componentId' sin 'e'
-            cantidad: comp.cantidad
-          }))
+          productData.componentesSeleccionados = prod.componentesSeleccionados.map(comp => comp.componenteId)
         }
 
         return productData
       })
 
-      // Generar número de orden temporal (backend debería manejarlo)
-      const timestamp = Date.now()
-      const randomNum = Math.floor(Math.random() * 1000)
-      const numeroOrden = `ORD-${timestamp}-${randomNum}`
-
+      // El backend genera automáticamente el numeroOrden, no lo enviamos
       const payload = {
-        ...orderForm,
-        numeroOrden,
+        cliente: orderForm.cliente,
+        fechaLimite: orderForm.fechaLimite,
+        notas: orderForm.notas,
         productos: cleanedProducts
       }
 
@@ -361,13 +356,18 @@ export default function Production() {
 
       let debugInfo = `PAYLOAD COMPLETO:\n${JSON.stringify(payload, null, 2)}\n\n`
 
+      debugInfo += `CAMBIOS APLICADOS:\n`
+      debugInfo += `- numeroOrden: REMOVIDO (backend lo genera)\n`
+      debugInfo += `- componentesSeleccionados: Ahora es array de IDs, no objetos\n\n`
+
       if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
-        debugInfo += `TIPO componentesSeleccionados: ${typeof payload.productos[0].componentesSeleccionados}\n`
-        debugInfo += `ES ARRAY: ${Array.isArray(payload.productos[0].componentesSeleccionados)}\n`
-        debugInfo += `PRIMER COMPONENTE: ${JSON.stringify(payload.productos[0].componentesSeleccionados[0], null, 2)}\n\n`
+        debugInfo += `componentesSeleccionados tipo: ${typeof payload.productos[0].componentesSeleccionados}\n`
+        debugInfo += `componentesSeleccionados es array: ${Array.isArray(payload.productos[0].componentesSeleccionados)}\n`
+        debugInfo += `componentesSeleccionados longitud: ${payload.productos[0].componentesSeleccionados.length}\n`
+        debugInfo += `componentesSeleccionados: ${JSON.stringify(payload.productos[0].componentesSeleccionados)}\n\n`
       }
 
-      debugInfo += '\n\n[Haz click en cualquier parte para cerrar y continuar]'
+      debugInfo += '\n[Haz click en cualquier parte para cerrar y continuar]'
       debugDiv.textContent = debugInfo
       debugDiv.onclick = () => debugDiv.remove()
       document.body.appendChild(debugDiv)
