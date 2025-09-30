@@ -171,7 +171,7 @@ export default function Production() {
 
         // Cargar componentes del modelo automáticamente
         try {
-          const res = await fetch(`${API_URL}/api/production/orders/model/${model._id}/components`)
+          const res = await fetch(`${API_URL}/api/inventory/models/${model._id}`)
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
           const data = await res.json()
@@ -336,8 +336,14 @@ export default function Production() {
         }))
       }))
 
+      // Generar número de orden temporal (backend debería manejarlo)
+      const timestamp = Date.now()
+      const randomNum = Math.floor(Math.random() * 1000)
+      const numeroOrden = `ORD-${timestamp}-${randomNum}`
+
       const payload = {
         ...orderForm,
+        numeroOrden,
         productos: cleanedProducts
       }
 
