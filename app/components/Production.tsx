@@ -355,14 +355,16 @@ export default function Production() {
         productos: cleanedProducts
       }
 
-      console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2))
-      console.log('📤 Tipo de productos:', typeof payload.productos)
-      console.log('📤 Es array productos:', Array.isArray(payload.productos))
+      // Mostrar payload con alert para evitar problemas de cache
+      let debugInfo = `PAYLOAD COMPLETO:\n${JSON.stringify(payload, null, 2)}\n\n`
+
       if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
-        console.log('📤 Tipo de componentesSeleccionados:', typeof payload.productos[0].componentesSeleccionados)
-        console.log('📤 Es array componentesSeleccionados:', Array.isArray(payload.productos[0].componentesSeleccionados))
-        console.log('📤 Primer componente:', payload.productos[0].componentesSeleccionados[0])
+        debugInfo += `TIPO componentesSeleccionados: ${typeof payload.productos[0].componentesSeleccionados}\n`
+        debugInfo += `ES ARRAY: ${Array.isArray(payload.productos[0].componentesSeleccionados)}\n`
+        debugInfo += `PRIMER COMPONENTE: ${JSON.stringify(payload.productos[0].componentesSeleccionados[0], null, 2)}`
       }
+
+      alert(debugInfo)
 
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
