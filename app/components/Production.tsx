@@ -325,16 +325,24 @@ export default function Production() {
 
     try {
       // Limpiar los productos antes de enviar (remover componentName si existe)
-      const cleanedProducts = orderForm.productos.map(prod => ({
-        itemId: prod.itemId,
-        itemType: prod.itemType,
-        itemName: prod.itemName,
-        cantidad: prod.cantidad,
-        componentesSeleccionados: prod.componentesSeleccionados?.map(comp => ({
-          componenteId: comp.componenteId,
-          cantidad: comp.cantidad
-        }))
-      }))
+      const cleanedProducts = orderForm.productos.map(prod => {
+        const productData: any = {
+          itemId: prod.itemId,
+          itemType: prod.itemType,
+          itemName: prod.itemName,
+          cantidad: prod.cantidad
+        }
+
+        // Solo agregar componentesSeleccionados si existen y no está vacío
+        if (prod.componentesSeleccionados && prod.componentesSeleccionados.length > 0) {
+          productData.componentesSeleccionados = prod.componentesSeleccionados.map(comp => ({
+            componenteId: comp.componenteId,
+            cantidad: comp.cantidad
+          }))
+        }
+
+        return productData
+      })
 
       // Generar número de orden temporal (backend debería manejarlo)
       const timestamp = Date.now()
@@ -347,7 +355,14 @@ export default function Production() {
         productos: cleanedProducts
       }
 
-      console.log('Payload enviado:', JSON.stringify(payload, null, 2))
+      console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2))
+      console.log('📤 Tipo de productos:', typeof payload.productos)
+      console.log('📤 Es array productos:', Array.isArray(payload.productos))
+      if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
+        console.log('📤 Tipo de componentesSeleccionados:', typeof payload.productos[0].componentesSeleccionados)
+        console.log('📤 Es array componentesSeleccionados:', Array.isArray(payload.productos[0].componentesSeleccionados))
+        console.log('📤 Primer componente:', payload.productos[0].componentesSeleccionados[0])
+      }
 
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
