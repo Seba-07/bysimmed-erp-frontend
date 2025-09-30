@@ -342,8 +342,13 @@ export default function Production() {
         return productData
       })
 
-      // El backend genera automáticamente el numeroOrden, no lo enviamos
+      // Generar numeroOrden temporal porque el backend lo requiere antes del pre-save hook
+      const year = new Date().getFullYear()
+      const timestamp = Date.now()
+      const numeroOrden = `OF-${year}-TEMP-${timestamp}`
+
       const payload = {
+        numeroOrden,
         cliente: orderForm.cliente,
         fechaLimite: orderForm.fechaLimite,
         notas: orderForm.notas,
@@ -357,8 +362,8 @@ export default function Production() {
       let debugInfo = `PAYLOAD COMPLETO:\n${JSON.stringify(payload, null, 2)}\n\n`
 
       debugInfo += `CAMBIOS APLICADOS:\n`
-      debugInfo += `- numeroOrden: REMOVIDO (backend lo genera)\n`
-      debugInfo += `- componentesSeleccionados: Ahora es array de IDs, no objetos\n\n`
+      debugInfo += `- numeroOrden: ${payload.numeroOrden}\n`
+      debugInfo += `- componentesSeleccionados: Array de IDs (no objetos)\n\n`
 
       if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
         debugInfo += `componentesSeleccionados tipo: ${typeof payload.productos[0].componentesSeleccionados}\n`
