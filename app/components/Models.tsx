@@ -210,23 +210,30 @@ export default function Models() {
           onChange={(e) => setForm({...form, descripcion: e.target.value})}
           disabled={submitting}
         />
-        <input
-          type="number"
-          placeholder="Stock"
-          value={form.stock}
-          onChange={(e) => setForm({...form, stock: Number(e.target.value)})}
-          disabled={submitting}
-          min="0"
-        />
-        <input
-          type="number"
-          placeholder="Precio unitario"
-          value={form.precioUnitario}
-          onChange={(e) => setForm({...form, precioUnitario: Number(e.target.value)})}
-          disabled={submitting}
-          min="0"
-          step="0.01"
-        />
+        <div className="form-field">
+          <label>Stock / Cantidad disponible</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={form.stock}
+            onChange={(e) => setForm({...form, stock: Number(e.target.value)})}
+            disabled={submitting}
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <div className="form-field">
+          <label>Precio unitario</label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={form.precioUnitario}
+            onChange={(e) => setForm({...form, precioUnitario: Number(e.target.value)})}
+            disabled={submitting}
+            min="0"
+            step="0.01"
+          />
+        </div>
 
         <div className="materials-section">
           <div className="section-header">

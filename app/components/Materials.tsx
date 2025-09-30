@@ -267,24 +267,30 @@ export default function Materials() {
           )}
         </div>
 
-        <input
-          type="number"
-          placeholder="Stock / Cantidad disponible"
-          value={form.stock}
-          onChange={(e) => setForm({...form, stock: Number(e.target.value)})}
-          disabled={submitting}
-          min="0"
-          step="0.01"
-        />
-        <input
-          type="number"
-          placeholder="Precio unitario"
-          value={form.precioUnitario}
-          onChange={(e) => setForm({...form, precioUnitario: Number(e.target.value)})}
-          disabled={submitting}
-          min="0"
-          step="0.01"
-        />
+        <div className="form-field">
+          <label>Stock / Cantidad disponible</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={form.stock}
+            onChange={(e) => setForm({...form, stock: Number(e.target.value)})}
+            disabled={submitting}
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <div className="form-field">
+          <label>Precio unitario</label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={form.precioUnitario}
+            onChange={(e) => setForm({...form, precioUnitario: Number(e.target.value)})}
+            disabled={submitting}
+            min="0"
+            step="0.01"
+          />
+        </div>
         <div className="form-actions">
           <button type="submit" disabled={submitting} className="button">
             {submitting ? 'Guardando...' : editingId ? 'Actualizar' : 'Agregar Material'}

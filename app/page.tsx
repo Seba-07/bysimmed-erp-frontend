@@ -1,14 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Inventory from './components/Inventory'
 import Materials from './components/Materials'
 import Components from './components/Components'
 import Models from './components/Models'
 
-type Tab = 'materials' | 'components' | 'models'
+type Tab = 'inventory' | 'materials' | 'components' | 'models'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>('materials')
+  const [activeTab, setActiveTab] = useState<Tab>('inventory')
+
+  useEffect(() => {
+    // Detectar hash en la URL y cambiar de tab
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as Tab
+      if (['inventory', 'materials', 'components', 'models'].includes(hash)) {
+        setActiveTab(hash)
+      }
+    }
+
+    // Ejecutar al cargar
+    handleHashChange()
+
+    // Escuchar cambios en el hash
+    window.addEventListener('hashchange', handleHashChange)
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange)
+    }
+  }, [])
 
   return (
     <main className="container">
@@ -18,6 +39,12 @@ export default function Home() {
 
       {/* Navegación por tabs */}
       <div className="tabs">
+        <button
+          className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          📊 Inventario
+        </button>
         <button
           className={`tab-button ${activeTab === 'materials' ? 'active' : ''}`}
           onClick={() => setActiveTab('materials')}
@@ -40,6 +67,7 @@ export default function Home() {
 
       {/* Contenido según tab activo */}
       <div className="tab-content">
+        {activeTab === 'inventory' && <Inventory />}
         {activeTab === 'materials' && <Materials />}
         {activeTab === 'components' && <Components />}
         {activeTab === 'models' && <Models />}
