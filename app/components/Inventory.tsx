@@ -465,48 +465,31 @@ export default function Inventory() {
                       let componentId: string | null = null
                       let componentName = 'Componente desconocido'
 
-                      // Debug con alert ya que console.log no aparece
-                      if (idx === 0) {
-                        const debugInfo = `
-COMPONENTE DEBUG:
-==================
-comp._id: ${comp._id}
-comp.cantidad: ${comp.cantidad}
 
-componenteId type: ${typeof comp.componenteId}
-componenteId._id: ${comp.componenteId?._id || 'N/A'}
-componenteId.nombre: ${comp.componenteId?.nombre || 'N/A'}
+                      // Acceso directo sin verificar typeof (problema de serialización)
+                      // Usar notación de corchetes para evitar problemas con getters/setters
+                      const compId = comp['componenteId']
 
-allComponents.length: ${allComponents.length}
-
-ESTRUCTURA COMPLETA:
-${JSON.stringify(comp, null, 2)}
-`
-                        alert(debugInfo)
-                      }
-
-                      // El backend devuelve comp.componenteId como objeto poblado con _id y nombre
-                      if (comp.componenteId) {
-                        if (typeof comp.componenteId === 'object' && comp.componenteId._id) {
-                          componentId = comp.componenteId._id
-                          componentName = comp.componenteId.nombre || 'Componente sin nombre'
-                          console.log('✓ Extraído de objeto - ID:', componentId, 'Nombre:', componentName)
-                        } else if (typeof comp.componenteId === 'string') {
-                          componentId = comp.componenteId
-                          console.log('Buscando string ID:', componentId, 'en', allComponents.length, 'componentes')
-                          // Si es string, buscar en allComponents
-                          const foundComp = allComponents.find((c: any) => c._id === componentId)
+                      if (compId && compId._id && compId.nombre) {
+                        componentId = compId._id
+                        componentName = compId.nombre
+                      } else if (compId && typeof compId === 'string') {
+                        // Si es string, buscar en allComponents
+                        componentId = compId
+                        const foundComp = allComponents.find((c: any) => c._id === componentId)
+                        if (foundComp) {
+                          componentName = foundComp.nombre
+                        }
+                      } else {
+                        // Último intento: buscar por _id del componente
+                        const compIdFromStruct = comp['componentId']?._id || comp['componenteId']
+                        if (compIdFromStruct) {
+                          const foundComp = allComponents.find((c: any) => c._id === compIdFromStruct)
                           if (foundComp) {
                             componentName = foundComp.nombre
-                            console.log('✓ Encontrado en allComponents:', componentName)
-                          } else {
-                            console.log('✗ NO encontrado en allComponents')
                           }
                         }
                       }
-
-                      console.log('componentName FINAL:', componentName)
-                      console.log('=======================\n')
 
                       return (
                         <div key={idx} className="editable-component-item">
