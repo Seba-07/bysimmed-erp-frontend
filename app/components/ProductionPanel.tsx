@@ -23,6 +23,7 @@ interface ComponentTimer {
   status: 'pending' | 'in_progress' | 'paused' | 'completed'
   elapsedTime: number
   startTime: number | null
+  uniqueId: string // Para diferenciar múltiples instancias del mismo componente
 }
 
 interface ModelTimer {
@@ -239,16 +240,52 @@ export default function ProductionPanel() {
 
     // Initialize timer if doesn't exist
     if (!timers[timerKey]) {
-      const componentTimers: ComponentTimer[] = (product.componentesSeleccionados || []).map(compId => {
-        const comp = getComponentDetails(compId)
-        return {
-          componentId: compId,
-          componentName: comp?.nombre || 'Desconocido',
-          status: 'pending',
-          elapsedTime: 0,
-          startTime: null
+      let componentTimers: ComponentTimer[] = []
+
+      // If it's a Model, fetch the model to get component quantities
+      if (product.itemType === 'Model') {
+        try {
+          const res = await fetch(`${API_URL}/api/inventory/models/${product.itemId}`)
+          if (res.ok) {
+            const data = await res.json()
+            if (data.success && data.data?.componentes) {
+              // Create multiple timers based on quantity
+              componentTimers = data.data.componentes.flatMap((comp: any, index: number) => {
+                const compId = comp.componentId?._id || comp.componentId || comp.componenteId?._id || comp.componenteId
+                const compName = comp.componentId?.nombre || comp.componenteId?.nombre || 'Desconocido'
+                const cantidad = comp.cantidad || 1
+
+                // Create one timer for each quantity
+                return Array.from({ length: cantidad }, (_, i) => ({
+                  componentId: compId,
+                  componentName: compName,
+                  status: 'pending' as const,
+                  elapsedTime: 0,
+                  startTime: null,
+                  uniqueId: `${compId}-${index}-${i}` // Unique ID for each instance
+                }))
+              })
+            }
+          }
+        } catch (err) {
+          console.error('Error cargando componentes del modelo:', err)
         }
-      })
+      }
+
+      // Fallback: if no components loaded or it's a Component type
+      if (componentTimers.length === 0) {
+        componentTimers = (product.componentesSeleccionados || []).map((compId, index) => {
+          const comp = getComponentDetails(compId)
+          return {
+            componentId: compId,
+            componentName: comp?.nombre || 'Desconocido',
+            status: 'pending' as const,
+            elapsedTime: 0,
+            startTime: null,
+            uniqueId: `${compId}-${index}`
+          }
+        })
+      }
 
       setTimers(prev => {
         const updated = {
@@ -344,6 +381,9 @@ export default function ProductionPanel() {
 
   const completeModel = async (orderId: string, productId: string) => {
     const timerKey = getTimerKey(orderId, productId)
+
+    // Update timer to completed
+    let updatedTimers: Record<string, ModelTimer> = {}
     setTimers(prev => {
       const updated = {
         ...prev,
@@ -354,6 +394,7 @@ export default function ProductionPanel() {
         }
       }
       saveTimersToStorage(updated)
+      updatedTimers = updated
       return updated
     })
     setShowComponentsModal(null)
@@ -361,9 +402,15 @@ export default function ProductionPanel() {
     // Check if all products in the order are completed
     const order = orders.find(o => o._id === orderId)
     if (order) {
-      // Need to check with updated timers state
+      // Wait a bit for state to update, then check with updated timers
       setTimeout(() => {
-        const allCompleted = allProductsCompletedInOrder(orderId, order.productos)
+        // Check using the updated timers
+        const allCompleted = order.productos.every(prod => {
+          const key = getTimerKey(orderId, prod.itemId)
+          const timer = updatedTimers[key]
+          return timer && timer.status === 'completed'
+        })
+
         if (allCompleted) {
           if (confirm(`✅ Todos los productos de la orden ${order.numeroOrden} han sido fabricados.\n\n¿Confirmar que la orden está completada?`)) {
             updateOrderStatus(orderId, 'completada')
@@ -385,7 +432,7 @@ export default function ProductionPanel() {
     }
   }
 
-  const startComponent = (orderId: string, productId: string, componentId: string) => {
+  const startComponent = (orderId: string, productId: string, uniqueId: string) => {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
@@ -394,7 +441,7 @@ export default function ProductionPanel() {
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
-            c.componentId === componentId
+            c.uniqueId === uniqueId
               ? { ...c, status: 'in_progress' as const, startTime: Date.now() - (c.elapsedTime * 1000) }
               : c
           )
@@ -405,7 +452,7 @@ export default function ProductionPanel() {
     })
   }
 
-  const pauseComponent = (orderId: string, productId: string, componentId: string) => {
+  const pauseComponent = (orderId: string, productId: string, uniqueId: string) => {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
@@ -414,7 +461,7 @@ export default function ProductionPanel() {
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
-            c.componentId === componentId
+            c.uniqueId === uniqueId
               ? { ...c, status: 'paused' as const, startTime: null }
               : c
           )
@@ -425,7 +472,7 @@ export default function ProductionPanel() {
     })
   }
 
-  const resetComponent = (orderId: string, productId: string, componentId: string) => {
+  const resetComponent = (orderId: string, productId: string, uniqueId: string) => {
     if (!confirm('¿Reiniciar este componente?')) return
 
     const timerKey = getTimerKey(orderId, productId)
@@ -436,7 +483,7 @@ export default function ProductionPanel() {
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
-            c.componentId === componentId
+            c.uniqueId === uniqueId
               ? { ...c, status: 'pending' as const, elapsedTime: 0, startTime: null }
               : c
           )
@@ -447,7 +494,7 @@ export default function ProductionPanel() {
     })
   }
 
-  const completeComponent = (orderId: string, productId: string, componentId: string) => {
+  const completeComponent = (orderId: string, productId: string, uniqueId: string) => {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => {
       const timer = prev[timerKey]
@@ -456,7 +503,7 @@ export default function ProductionPanel() {
         [timerKey]: {
           ...timer,
           components: timer.components.map(c =>
-            c.componentId === componentId
+            c.uniqueId === uniqueId
               ? { ...c, status: 'completed' as const, startTime: null }
               : c
           )
@@ -605,14 +652,14 @@ export default function ProductionPanel() {
             <h3>🔧 Componentes en Fabricación</h3>
 
             <div className="components-list-modal">
-              {timers[showComponentsModal].components.map((comp) => {
+              {timers[showComponentsModal].components.map((comp, idx) => {
                 const componentDetails = getComponentDetails(comp.componentId)
                 const [orderId, productId] = showComponentsModal.split('-')
 
                 return (
-                  <div key={comp.componentId} className="component-card-modal">
+                  <div key={comp.uniqueId} className="component-card-modal">
                     <div className="component-header-modal">
-                      <h4>{comp.componentName}</h4>
+                      <h4>{comp.componentName} #{idx + 1}</h4>
                       <span className="component-timer">{formatTime(comp.elapsedTime)}</span>
                     </div>
 
@@ -633,14 +680,14 @@ export default function ProductionPanel() {
                       {comp.status === 'pending' || comp.status === 'paused' ? (
                         <button
                           className="control-btn start-btn"
-                          onClick={() => startComponent(orderId, productId, comp.componentId)}
+                          onClick={() => startComponent(orderId, productId, comp.uniqueId)}
                         >
                           ▶️ {comp.status === 'paused' ? 'Reanudar' : 'Iniciar'}
                         </button>
                       ) : comp.status === 'in_progress' ? (
                         <button
                           className="control-btn pause-btn"
-                          onClick={() => pauseComponent(orderId, productId, comp.componentId)}
+                          onClick={() => pauseComponent(orderId, productId, comp.uniqueId)}
                         >
                           ⏸️ Pausar
                         </button>
@@ -650,13 +697,13 @@ export default function ProductionPanel() {
                         <>
                           <button
                             className="control-btn reset-btn"
-                            onClick={() => resetComponent(orderId, productId, comp.componentId)}
+                            onClick={() => resetComponent(orderId, productId, comp.uniqueId)}
                           >
                             🔄 Reiniciar
                           </button>
                           <button
                             className="control-btn finish-btn"
-                            onClick={() => completeComponent(orderId, productId, comp.componentId)}
+                            onClick={() => completeComponent(orderId, productId, comp.uniqueId)}
                           >
                             ✅ Finalizar
                           </button>
