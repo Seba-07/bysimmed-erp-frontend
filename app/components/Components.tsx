@@ -147,6 +147,7 @@ export default function Components() {
         setMaterialsList([])
         setEditingId(null)
         loadComponents()
+        alert(editingId ? '✅ Componente actualizado exitosamente' : '✅ Componente creado exitosamente')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando componente')
@@ -285,7 +286,7 @@ export default function Components() {
                 onChange={(e) => updateMaterial(index, 'cantidad', Number(e.target.value))}
                 disabled={submitting}
                 min="0"
-                step="0.01"
+                step="1"
               />
               <button
                 type="button"
@@ -317,51 +318,6 @@ export default function Components() {
         </div>
       )}
 
-      {loading ? (
-        <p>Cargando componentes...</p>
-      ) : components.length > 0 ? (
-        <div className="inventory-list">
-          <h3>📋 Componentes registrados ({components.length})</h3>
-          {components.map((component) => (
-            <div key={component._id} className="inventory-card">
-              <div className="card-header">
-                <h4>{component.nombre}</h4>
-                <div className="card-actions">
-                  <button onClick={() => handleEdit(component)} className="edit-btn">
-                    ✏️
-                  </button>
-                  <button onClick={() => handleDelete(component._id)} className="delete-btn">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-              {component.descripcion && <p className="description">{component.descripcion}</p>}
-              <div className="card-details">
-                <p><strong>Stock:</strong> {component.stock}</p>
-                <p><strong>Precio:</strong> ${component.precioUnitario.toFixed(2)}</p>
-
-                {component.materiales.length > 0 && (
-                  <div className="nested-list">
-                    <p><strong>Materiales:</strong></p>
-                    <ul>
-                      {component.materiales.map((mat, idx) => (
-                        <li key={idx}>
-                          {getMaterialName(mat.materialId)} - {mat.cantidad}{' '}
-                          {typeof mat.materialId === 'object' ? mat.materialId.unidad : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <p className="date">📅 {new Date(component.fechaCreacion).toLocaleDateString()}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No hay componentes registrados</p>
-      )}
     </div>
   )
 }

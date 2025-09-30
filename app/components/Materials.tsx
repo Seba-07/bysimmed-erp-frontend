@@ -144,6 +144,7 @@ export default function Materials() {
         setForm({ nombre: '', descripcion: '', unidad: '', stock: 0 })
         setEditingId(null)
         loadMaterials()
+        alert(editingId ? '✅ Material actualizado exitosamente' : '✅ Material creado exitosamente')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando material')
@@ -295,36 +296,6 @@ export default function Materials() {
         </div>
       )}
 
-      {loading ? (
-        <p>Cargando materiales...</p>
-      ) : materials.length > 0 ? (
-        <div className="inventory-list">
-          <h3>📋 Materiales registrados ({materials.length})</h3>
-          {materials.map((material) => (
-            <div key={material._id} className="inventory-card">
-              <div className="card-header">
-                <h4>{material.nombre}</h4>
-                <div className="card-actions">
-                  <button onClick={() => handleEdit(material)} className="edit-btn">
-                    ✏️
-                  </button>
-                  <button onClick={() => handleDelete(material._id)} className="delete-btn">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-              {material.descripcion && <p className="description">{material.descripcion}</p>}
-              <div className="card-details">
-                <p><strong>Unidad:</strong> {getUnitDisplay(material.unidad)}</p>
-                <p><strong>Stock:</strong> {material.stock}</p>
-                <p className="date">📅 {new Date(material.fechaCreacion).toLocaleDateString()}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No hay materiales registrados</p>
-      )}
     </div>
   )
 }

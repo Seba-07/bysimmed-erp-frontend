@@ -146,6 +146,7 @@ export default function Models() {
         setComponentsList([])
         setEditingId(null)
         loadModels()
+        alert(editingId ? '✅ Modelo actualizado exitosamente' : '✅ Modelo creado exitosamente')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando modelo')
@@ -299,50 +300,6 @@ export default function Models() {
         </div>
       )}
 
-      {loading ? (
-        <p>Cargando modelos...</p>
-      ) : models.length > 0 ? (
-        <div className="inventory-list">
-          <h3>📋 Modelos registrados ({models.length})</h3>
-          {models.map((model) => (
-            <div key={model._id} className="inventory-card">
-              <div className="card-header">
-                <h4>{model.nombre}</h4>
-                <div className="card-actions">
-                  <button onClick={() => handleEdit(model)} className="edit-btn">
-                    ✏️
-                  </button>
-                  <button onClick={() => handleDelete(model._id)} className="delete-btn">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-              {model.descripcion && <p className="description">{model.descripcion}</p>}
-              <div className="card-details">
-                <p><strong>Stock:</strong> {model.stock}</p>
-                <p><strong>Precio:</strong> ${model.precioUnitario.toFixed(2)}</p>
-
-                {model.componentes.length > 0 && (
-                  <div className="nested-list">
-                    <p><strong>Componentes:</strong></p>
-                    <ul>
-                      {model.componentes.map((comp, idx) => (
-                        <li key={idx}>
-                          {getComponentName(comp.componentId)} - {comp.cantidad} unidades
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <p className="date">📅 {new Date(model.fechaCreacion).toLocaleDateString()}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No hay modelos registrados</p>
-      )}
     </div>
   )
 }
