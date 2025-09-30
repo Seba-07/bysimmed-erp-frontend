@@ -276,7 +276,7 @@ export default function Inventory() {
                       <h4>{material.nombre}</h4>
                       {material.descripcion && <p className="description">{material.descripcion}</p>}
                       <div className="item-details">
-                        <span className="detail-badge">Stock: {material.stock} {getUnitDisplay(material.unidad)}</span>
+                        <span className="detail-badge">Cantidad: {material.stock} {getUnitDisplay(material.unidad)}</span>
                       </div>
                     </div>
                   ))}
@@ -301,7 +301,7 @@ export default function Inventory() {
                       <h4>{component.nombre}</h4>
                       {component.descripcion && <p className="description">{component.descripcion}</p>}
                       <div className="item-details">
-                        <span className="detail-badge">Stock: {component.stock}</span>
+                        <span className="detail-badge">Cantidad: {component.stock}</span>
                       </div>
                     </div>
                   ))}
@@ -326,7 +326,7 @@ export default function Inventory() {
                       <h4>{model.nombre}</h4>
                       {model.descripcion && <p className="description">{model.descripcion}</p>}
                       <div className="item-details">
-                        <span className="detail-badge">Stock: {model.stock}</span>
+                        <span className="detail-badge">Cantidad: {model.stock}</span>
                       </div>
                     </div>
                   ))}
@@ -415,7 +415,7 @@ export default function Inventory() {
             </div>
 
             <div className="form-group">
-              <label>Stock</label>
+              <label>Cantidad disponible</label>
               <input
                 type="number"
                 value={editData.stock || 0}
