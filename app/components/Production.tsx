@@ -21,7 +21,11 @@ interface OrderProduct {
   itemType: 'Component' | 'Model'
   itemName: string
   cantidad: number
-  componentesSeleccionados?: string[]
+  componentesSeleccionados?: Array<{
+    componenteId: string
+    componentName: string
+    cantidad: number
+  }>
 }
 
 interface ProductionOrder {
@@ -61,6 +65,13 @@ export default function Production() {
     cantidad: 1,
     componentesSeleccionados: []
   })
+
+  const [modelComponentsList, setModelComponentsList] = useState<Array<{
+    componenteId: string
+    componentName: string
+    cantidad: number
+  }>>([])
+  const [availableComponentsForModel, setAvailableComponentsForModel] = useState<Component[]>([])
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -131,9 +142,11 @@ export default function Production() {
       componentesSeleccionados: []
     })
     setSelectedModelComponents(null)
+    setModelComponentsList([])
+    setAvailableComponentsForModel([])
   }
 
-  const handleProductSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleProductSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const itemId = e.target.value
     if (!itemId) return
 
@@ -155,21 +168,70 @@ export default function Production() {
           itemName: model.nombre,
           componentesSeleccionados: []
         })
-        loadModelComponents(model._id)
+
+        // Cargar componentes del modelo automáticamente
+        try {
+          const res = await fetch(`${API_URL}/api/production/orders/model/${model._id}/components`)
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+          const data = await res.json()
+          if (data.success) {
+            setSelectedModelComponents(data.data)
+
+            // Auto-llenar la lista de componentes
+            const autoComponents = data.data.componentes.map((comp: any) => {
+              const compData = typeof comp.componenteId === 'string'
+                ? components.find(c => c._id === comp.componenteId)
+                : comp.componenteId
+
+              return {
+                componenteId: compData?._id || comp.componenteId,
+                componentName: compData?.nombre || 'Desconocido',
+                cantidad: comp.cantidad
+              }
+            })
+
+            setModelComponentsList(autoComponents)
+            setAvailableComponentsForModel(components.filter(c =>
+              !autoComponents.some((ac: any) => ac.componenteId === c._id)
+            ))
+          }
+        } catch (err) {
+          console.error('Error cargando componentes:', err)
+        }
       }
     }
   }
 
-  const toggleComponent = (componentId: string) => {
-    const current = currentProduct.componentesSeleccionados || []
-    const newSelection = current.includes(componentId)
-      ? current.filter(id => id !== componentId)
-      : [...current, componentId]
+  const removeComponentFromModel = (componentId: string) => {
+    const removed = modelComponentsList.find(c => c.componenteId === componentId)
+    setModelComponentsList(modelComponentsList.filter(c => c.componenteId !== componentId))
 
-    setCurrentProduct({
-      ...currentProduct,
-      componentesSeleccionados: newSelection
-    })
+    // Agregar a disponibles si existe
+    if (removed) {
+      const comp = components.find(c => c._id === componentId)
+      if (comp && !availableComponentsForModel.find(c => c._id === componentId)) {
+        setAvailableComponentsForModel([...availableComponentsForModel, comp])
+      }
+    }
+  }
+
+  const addComponentToModel = (componentId: string) => {
+    const comp = components.find(c => c._id === componentId)
+    if (!comp) return
+
+    setModelComponentsList([
+      ...modelComponentsList,
+      { componenteId: comp._id, componentName: comp.nombre, cantidad: 1 }
+    ])
+
+    setAvailableComponentsForModel(availableComponentsForModel.filter(c => c._id !== componentId))
+  }
+
+  const updateComponentQuantity = (componentId: string, newQuantity: number) => {
+    setModelComponentsList(modelComponentsList.map(c =>
+      c.componenteId === componentId ? { ...c, cantidad: newQuantity } : c
+    ))
   }
 
   const addProductToOrder = () => {
@@ -178,14 +240,19 @@ export default function Production() {
       return
     }
 
-    if (currentProduct.itemType === 'Model' && (!currentProduct.componentesSeleccionados || currentProduct.componentesSeleccionados.length === 0)) {
-      alert('Debes seleccionar al menos un componente para este modelo')
+    if (currentProduct.itemType === 'Model' && modelComponentsList.length === 0) {
+      alert('Debes tener al menos un componente para este modelo')
       return
+    }
+
+    const productToAdd: OrderProduct = {
+      ...currentProduct,
+      componentesSeleccionados: currentProduct.itemType === 'Model' ? modelComponentsList : undefined
     }
 
     setOrderForm({
       ...orderForm,
-      productos: [...orderForm.productos, { ...currentProduct }]
+      productos: [...orderForm.productos, productToAdd]
     })
 
     // Reset current product
@@ -197,6 +264,8 @@ export default function Production() {
       componentesSeleccionados: []
     })
     setSelectedModelComponents(null)
+    setModelComponentsList([])
+    setAvailableComponentsForModel([])
   }
 
   const removeProductFromOrder = (index: number) => {
@@ -365,7 +434,11 @@ export default function Production() {
                           <span className="producto-cantidad">x{prod.cantidad}</span>
                           {prod.componentesSeleccionados && prod.componentesSeleccionados.length > 0 && (
                             <div className="componentes-seleccionados">
-                              <small>Componentes: {prod.componentesSeleccionados.map(getComponentName).join(', ')}</small>
+                              <small>
+                                Componentes: {prod.componentesSeleccionados.map((c: any) =>
+                                  typeof c === 'string' ? getComponentName(c) : `${c.componentName} (x${c.cantidad})`
+                                ).join(', ')}
+                              </small>
                             </div>
                           )}
                         </div>
@@ -443,9 +516,11 @@ export default function Production() {
                 <label>Fecha límite *</label>
                 <input
                   type="date"
+                  className="date-input"
                   value={orderForm.fechaLimite}
                   onChange={(e) => setOrderForm({...orderForm, fechaLimite: e.target.value})}
                   required
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
 
@@ -525,30 +600,59 @@ export default function Production() {
                     </div>
                   </div>
 
-                  {/* Selección de componentes para modelos */}
-                  {currentProduct.itemType === 'Model' && selectedModelComponents && (
-                    <div className="components-selection">
-                      <label>Componentes del modelo (selecciona los que deseas fabricar):</label>
-                      <div className="components-checkboxes">
-                        {selectedModelComponents.componentes.map((comp: any) => {
-                          const compData = typeof comp.componenteId === 'string'
-                            ? components.find(c => c._id === comp.componenteId)
-                            : comp.componenteId
+                  {/* Lista de componentes editables para modelos */}
+                  {currentProduct.itemType === 'Model' && currentProduct.itemId && (
+                    <div className="model-components-section">
+                      <label>Componentes del modelo:</label>
 
-                          if (!compData) return null
+                      {modelComponentsList.length > 0 ? (
+                        <div className="model-components-list">
+                          {modelComponentsList.map((comp) => (
+                            <div key={comp.componenteId} className="model-component-item">
+                              <span className="component-name">{comp.componentName}</span>
+                              <div className="component-controls">
+                                <input
+                                  type="number"
+                                  className="component-quantity-input"
+                                  value={comp.cantidad}
+                                  onChange={(e) => updateComponentQuantity(comp.componenteId, Number(e.target.value))}
+                                  min="1"
+                                />
+                                <button
+                                  type="button"
+                                  className="component-remove-btn"
+                                  onClick={() => removeComponentFromModel(comp.componenteId)}
+                                  title="Eliminar componente"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="empty-components-msg">No hay componentes en este modelo</p>
+                      )}
 
-                          return (
-                            <label key={compData._id} className="checkbox-label">
-                              <input
-                                type="checkbox"
-                                checked={currentProduct.componentesSeleccionados?.includes(compData._id) || false}
-                                onChange={() => toggleComponent(compData._id)}
-                              />
-                              <span>{compData.nombre} (x{comp.cantidad})</span>
-                            </label>
-                          )
-                        })}
-                      </div>
+                      {/* Agregar nuevo componente */}
+                      {availableComponentsForModel.length > 0 && (
+                        <div className="add-component-section">
+                          <select
+                            className="add-component-select"
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                addComponentToModel(e.target.value)
+                                e.target.value = ''
+                              }
+                            }}
+                          >
+                            <option value="">+ Agregar componente...</option>
+                            {availableComponentsForModel.map(c => (
+                              <option key={c._id} value={c._id}>{c.nombre}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   )}
 

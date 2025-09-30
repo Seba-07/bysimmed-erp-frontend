@@ -16,6 +16,7 @@ interface Material {
   stock: number
   precioUnitario: number
   tipo: 'material'
+  materiales?: any[]
 }
 
 interface Component {
@@ -25,6 +26,7 @@ interface Component {
   stock: number
   precioUnitario: number
   tipo: 'component'
+  materiales?: any[]
 }
 
 interface Model {
@@ -34,6 +36,7 @@ interface Model {
   stock: number
   precioUnitario: number
   tipo: 'model'
+  componentes?: any[]
 }
 
 type InventoryItem = Material | Component | Model
@@ -45,11 +48,19 @@ export default function Inventory() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showNewItemModal, setShowNewItemModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'materials' | 'components' | 'models'>('materials')
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [editData, setEditData] = useState<any>(null)
+  const [units, setUnits] = useState<Unit[]>([])
+  const [allMaterials, setAllMaterials] = useState<Material[]>([])
+  const [allComponents, setAllComponents] = useState<Component[]>([])
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
   useEffect(() => {
     loadAllInventory()
+    loadUnits()
   }, [])
 
   const loadAllInventory = async () => {
@@ -68,10 +79,14 @@ export default function Inventory() {
       const modelsData = await modelsRes.json()
 
       if (materialsData.success) {
-        setMaterials(materialsData.data.map((m: any) => ({ ...m, tipo: 'material' })))
+        const materialsWithType = materialsData.data.map((m: any) => ({ ...m, tipo: 'material' }))
+        setMaterials(materialsWithType)
+        setAllMaterials(materialsWithType)
       }
       if (componentsData.success) {
-        setComponents(componentsData.data.map((c: any) => ({ ...c, tipo: 'component' })))
+        const componentsWithType = componentsData.data.map((c: any) => ({ ...c, tipo: 'component' }))
+        setComponents(componentsWithType)
+        setAllComponents(componentsWithType)
       }
       if (modelsData.success) {
         setModels(modelsData.data.map((m: any) => ({ ...m, tipo: 'model' })))
@@ -83,11 +98,123 @@ export default function Inventory() {
     }
   }
 
+  const loadUnits = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/inventory/units`)
+      const data = await res.json()
+      if (data.success) {
+        setUnits(data.data)
+      }
+    } catch (err) {
+      console.error('Error cargando unidades:', err)
+    }
+  }
+
   const getUnitDisplay = (unit: string | Unit) => {
     if (typeof unit === 'object') {
       return `${unit.abreviatura}`
     }
     return ''
+  }
+
+  const handleItemClick = async (item: InventoryItem) => {
+    setLoading(true)
+    try {
+      let endpoint = ''
+      if (item.tipo === 'material') {
+        endpoint = `/api/inventory/materials/${item._id}`
+      } else if (item.tipo === 'component') {
+        endpoint = `/api/inventory/components/${item._id}`
+      } else if (item.tipo === 'model') {
+        endpoint = `/api/inventory/models/${item._id}`
+      }
+
+      const res = await fetch(`${API_URL}${endpoint}`)
+      const data = await res.json()
+
+      if (data.success) {
+        const fullItem = { ...data.data, tipo: item.tipo }
+        setSelectedItem(fullItem)
+        setEditData(fullItem)
+        setShowDetailModal(true)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error cargando detalle')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateItem = async () => {
+    if (!selectedItem || !editData) return
+
+    setLoading(true)
+    try {
+      let endpoint = ''
+      if (selectedItem.tipo === 'material') {
+        endpoint = `/api/inventory/materials/${selectedItem._id}`
+      } else if (selectedItem.tipo === 'component') {
+        endpoint = `/api/inventory/components/${selectedItem._id}`
+      } else if (selectedItem.tipo === 'model') {
+        endpoint = `/api/inventory/models/${selectedItem._id}`
+      }
+
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData)
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setShowDetailModal(false)
+        setSelectedItem(null)
+        setEditData(null)
+        await loadAllInventory()
+      } else {
+        setError(data.message || 'Error actualizando')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error actualizando')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteItem = async () => {
+    if (!selectedItem || !confirm('¿Estás seguro de eliminar este producto?')) return
+
+    setLoading(true)
+    try {
+      let endpoint = ''
+      if (selectedItem.tipo === 'material') {
+        endpoint = `/api/inventory/materials/${selectedItem._id}`
+      } else if (selectedItem.tipo === 'component') {
+        endpoint = `/api/inventory/components/${selectedItem._id}`
+      } else if (selectedItem.tipo === 'model') {
+        endpoint = `/api/inventory/models/${selectedItem._id}`
+      }
+
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setShowDetailModal(false)
+        setSelectedItem(null)
+        setEditData(null)
+        await loadAllInventory()
+      } else {
+        setError(data.message || 'Error eliminando')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error eliminando')
+    } finally {
+      setLoading(false)
+    }
   }
 
 
@@ -109,75 +236,106 @@ export default function Inventory() {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="tabs-container">
+        <button
+          className={`tab ${activeTab === 'materials' ? 'active' : ''}`}
+          onClick={() => setActiveTab('materials')}
+        >
+          📦 Materiales ({materials.length})
+        </button>
+        <button
+          className={`tab ${activeTab === 'components' ? 'active' : ''}`}
+          onClick={() => setActiveTab('components')}
+        >
+          🔧 Componentes ({components.length})
+        </button>
+        <button
+          className={`tab ${activeTab === 'models' ? 'active' : ''}`}
+          onClick={() => setActiveTab('models')}
+        >
+          🏭 Modelos ({models.length})
+        </button>
+      </div>
+
       {loading ? (
         <p>Cargando inventario...</p>
       ) : (
-        <div className="inventory-sections">
+        <div className="tab-content">
           {/* MATERIALES */}
-          <div className="inventory-category">
-            <div className="category-header">
-              <h3>📦 Materiales ({materials.length})</h3>
-            </div>
-            {materials.length > 0 ? (
-              <div className="inventory-grid">
-                {materials.map((material) => (
-                  <div key={material._id} className="inventory-item">
-                    <h4>{material.nombre}</h4>
-                    {material.descripcion && <p className="description">{material.descripcion}</p>}
-                    <div className="item-details">
-                      <span className="detail-badge">Stock: {material.stock} {getUnitDisplay(material.unidad)}</span>
+          {activeTab === 'materials' && (
+            <div>
+              {materials.length > 0 ? (
+                <div className="inventory-grid">
+                  {materials.map((material) => (
+                    <div
+                      key={material._id}
+                      className="inventory-item clickable"
+                      onClick={() => handleItemClick(material)}
+                    >
+                      <h4>{material.nombre}</h4>
+                      {material.descripcion && <p className="description">{material.descripcion}</p>}
+                      <div className="item-details">
+                        <span className="detail-badge">Stock: {material.stock} {getUnitDisplay(material.unidad)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="empty-message">No hay materiales registrados</p>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-message">No hay materiales registrados</p>
+              )}
+            </div>
+          )}
 
           {/* COMPONENTES */}
-          <div className="inventory-category">
-            <div className="category-header">
-              <h3>🔧 Componentes ({components.length})</h3>
-            </div>
-            {components.length > 0 ? (
-              <div className="inventory-grid">
-                {components.map((component) => (
-                  <div key={component._id} className="inventory-item">
-                    <h4>{component.nombre}</h4>
-                    {component.descripcion && <p className="description">{component.descripcion}</p>}
-                    <div className="item-details">
-                      <span className="detail-badge">Stock: {component.stock}</span>
+          {activeTab === 'components' && (
+            <div>
+              {components.length > 0 ? (
+                <div className="inventory-grid">
+                  {components.map((component) => (
+                    <div
+                      key={component._id}
+                      className="inventory-item clickable"
+                      onClick={() => handleItemClick(component)}
+                    >
+                      <h4>{component.nombre}</h4>
+                      {component.descripcion && <p className="description">{component.descripcion}</p>}
+                      <div className="item-details">
+                        <span className="detail-badge">Stock: {component.stock}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="empty-message">No hay componentes registrados</p>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-message">No hay componentes registrados</p>
+              )}
+            </div>
+          )}
 
           {/* MODELOS */}
-          <div className="inventory-category">
-            <div className="category-header">
-              <h3>🏭 Modelos ({models.length})</h3>
-            </div>
-            {models.length > 0 ? (
-              <div className="inventory-grid">
-                {models.map((model) => (
-                  <div key={model._id} className="inventory-item">
-                    <h4>{model.nombre}</h4>
-                    {model.descripcion && <p className="description">{model.descripcion}</p>}
-                    <div className="item-details">
-                      <span className="detail-badge">Stock: {model.stock}</span>
+          {activeTab === 'models' && (
+            <div>
+              {models.length > 0 ? (
+                <div className="inventory-grid">
+                  {models.map((model) => (
+                    <div
+                      key={model._id}
+                      className="inventory-item clickable"
+                      onClick={() => handleItemClick(model)}
+                    >
+                      <h4>{model.nombre}</h4>
+                      {model.descripcion && <p className="description">{model.descripcion}</p>}
+                      <div className="item-details">
+                        <span className="detail-badge">Stock: {model.stock}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="empty-message">No hay modelos registrados</p>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-message">No hay modelos registrados</p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -224,6 +382,106 @@ export default function Inventory() {
             <button onClick={() => setShowNewItemModal(false)} className="button secondary">
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalle y edición */}
+      {showDetailModal && selectedItem && editData && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>
+              {selectedItem.tipo === 'material' && '📦 Detalle del Material'}
+              {selectedItem.tipo === 'component' && '🔧 Detalle del Componente'}
+              {selectedItem.tipo === 'model' && '🏭 Detalle del Modelo'}
+            </h3>
+
+            <div className="form-group">
+              <label>Nombre</label>
+              <input
+                type="text"
+                value={editData.nombre || ''}
+                onChange={(e) => setEditData({ ...editData, nombre: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Descripción</label>
+              <textarea
+                value={editData.descripcion || ''}
+                onChange={(e) => setEditData({ ...editData, descripcion: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Stock</label>
+              <input
+                type="number"
+                value={editData.stock || 0}
+                onChange={(e) => setEditData({ ...editData, stock: parseFloat(e.target.value) })}
+              />
+            </div>
+
+            {selectedItem.tipo === 'material' && (
+              <div className="form-group">
+                <label>Unidad</label>
+                <select
+                  value={typeof editData.unidad === 'object' ? editData.unidad._id : editData.unidad}
+                  onChange={(e) => setEditData({ ...editData, unidad: e.target.value })}
+                >
+                  {units.map((unit) => (
+                    <option key={unit._id} value={unit._id}>
+                      {unit.nombre} ({unit.abreviatura})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {selectedItem.tipo === 'component' && editData.materiales && editData.materiales.length > 0 && (
+              <div className="form-group">
+                <label>Materiales utilizados</label>
+                <div className="materials-list">
+                  {editData.materiales.map((mat: any, idx: number) => (
+                    <div key={idx} className="material-item">
+                      <span>{mat.material?.nombre || 'Material'}</span>
+                      <span className="cantidad-badge">
+                        {mat.cantidad} {mat.material?.unidad?.abreviatura || ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedItem.tipo === 'model' && editData.componentes && editData.componentes.length > 0 && (
+              <div className="form-group">
+                <label>Componentes del modelo</label>
+                <div className="materials-list">
+                  {editData.componentes.map((comp: any, idx: number) => (
+                    <div key={idx} className="material-item">
+                      <span>{comp.componente?.nombre || 'Componente'}</span>
+                      <span className="cantidad-badge">
+                        {comp.cantidad}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button onClick={handleUpdateItem} className="button" disabled={loading}>
+                {loading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+              <button onClick={handleDeleteItem} className="button danger" disabled={loading}>
+                Eliminar
+              </button>
+              <button onClick={() => setShowDetailModal(false)} className="button secondary">
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

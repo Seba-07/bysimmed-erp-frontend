@@ -1092,3 +1092,339 @@ body {
   color: #94a3b8;
   font-size: 0.8rem;
 }
+
+/* Tabs Container for Inventory */
+.tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #334155;
+  padding-bottom: 0.5rem;
+}
+
+.tabs-container .tab {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px 8px 0 0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tabs-container .tab:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.tabs-container .tab.active {
+  background: #3b82f6;
+  color: white;
+  border-bottom-color: #3b82f6;
+}
+
+.tab-content {
+  padding-top: 1rem;
+}
+
+/* Clickable Inventory Items */
+.inventory-item.clickable {
+  cursor: pointer;
+}
+
+.inventory-item.clickable:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+}
+
+/* Detail Modal */
+.detail-modal {
+  max-width: 700px;
+}
+
+.detail-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.detail-modal .form-group label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.detail-modal .form-group input,
+.detail-modal .form-group textarea,
+.detail-modal .form-group select {
+  background: #0f172a;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.detail-modal .form-group input:focus,
+.detail-modal .form-group textarea:focus,
+.detail-modal .form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.detail-modal .materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.detail-modal .material-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.detail-modal .material-item span {
+  color: #f1f5f9;
+}
+
+.detail-modal .cantidad-badge {
+  background: #334155;
+  color: #60a5fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.detail-modal .modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Date Input Styling */
+.date-input {
+  background: #0f172a;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.date-input:hover {
+  border-color: #3b82f6;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Model Components Section */
+.model-components-section {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.model-components-section > label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.model-components-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.model-component-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  transition: all 0.2s;
+}
+
+.model-component-item:hover {
+  border-color: #3b82f6;
+}
+
+.component-name {
+  color: #f1f5f9;
+  font-weight: 500;
+  flex: 1;
+}
+
+.component-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.component-quantity-input {
+  background: #0f172a;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 70px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.component-quantity-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.component-remove-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.component-remove-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.empty-components-msg {
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+.add-component-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #334155;
+}
+
+.add-component-select {
+  width: 100%;
+  background: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-component-select:hover {
+  border-color: #3b82f6;
+}
+
+.add-component-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Improved Form Fields */
+.production-form .form-field label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.production-form input,
+.production-form select,
+.production-form textarea {
+  transition: all 0.2s ease;
+}
+
+.production-form input::placeholder,
+.production-form textarea::placeholder {
+  color: #64748b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tabs-container {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .tabs-container .tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .model-component-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .component-controls {
+    justify-content: space-between;
+  }
+
+  .component-quantity-input {
+    width: auto;
+    flex: 1;
+  }
+
+  .detail-modal .modal-actions {
+    flex-direction: column;
+  }
+
+  .detail-modal .modal-actions .button {
+    width: 100%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
