@@ -373,9 +373,6 @@ export default function Production() {
       console.log('📤 Creando orden:', payload)
       console.log('📋 numeroOrden:', numeroOrden)
 
-      // Alert temporal para debug
-      alert(`DEBUG:\nnumeroOrden: "${numeroOrden}"\ntipo: ${typeof numeroOrden}\nlongitud: ${numeroOrden?.length}\nen payload: "${payload.numeroOrden}"`)
-
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -504,93 +501,60 @@ export default function Production() {
       {loading ? (
         <p>Cargando órdenes...</p>
       ) : orders.length > 0 ? (
-        <div className="orders-list">
-          {orders.map((order) => {
-            const estadoBadge = getEstadoBadge(order.estado)
+        <div className="orders-table-container">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Cliente</th>
+                <th>Productos</th>
+                <th>Fecha Límite</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => {
+                const estadoBadge = getEstadoBadge(order.estado)
 
-            return (
-              <div key={order._id} className="order-card">
-                <div className="order-header">
-                  <div className="order-title">
-                    <h3>{order.numeroOrden}</h3>
-                    <span className="cliente-badge">👤 {order.cliente}</span>
-                  </div>
-                  <div className="order-actions">
-                    <button
-                      onClick={() => deleteOrder(order._id)}
-                      className="delete-btn"
-                      title="Eliminar orden"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-
-                <div className="order-details">
-                  <div className="detail-row">
-                    <span className="detail-label">Productos:</span>
-                    <div className="productos-list">
+                return (
+                  <tr key={order._id} className="order-row">
+                    <td className="order-number">{order.numeroOrden}</td>
+                    <td className="order-cliente">👤 {order.cliente}</td>
+                    <td className="order-productos">
                       {order.productos.map((prod, idx) => (
-                        <div key={idx} className="producto-item">
-                          <span className="producto-name">
-                            {prod.itemType === 'Component' ? '🔧' : '🏭'} {prod.itemName}
-                          </span>
-                          <span className="producto-cantidad">x{prod.cantidad}</span>
-                          {prod.componentesSeleccionados && prod.componentesSeleccionados.length > 0 && (
-                            <div className="componentes-seleccionados">
-                              <small>
-                                Componentes: {prod.componentesSeleccionados.map((c: any) =>
-                                  typeof c === 'string' ? getComponentName(c) : `${c.componentName} (x${c.cantidad})`
-                                ).join(', ')}
-                              </small>
-                            </div>
-                          )}
+                        <div key={idx} className="producto-inline">
+                          {prod.itemType === 'Component' ? '🔧' : '🏭'} {prod.itemName} x{prod.cantidad}
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Fecha límite:</span>
-                    <span className="detail-value">{formatDate(order.fechaLimite)}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-label">Estado:</span>
-                    <select
-                      value={order.estado}
-                      onChange={(e) => updateOrderStatus(order._id, e.target.value as ProductionOrder['estado'])}
-                      className={`status-select ${estadoBadge.class}`}
-                    >
-                      <option value="activa">🟢 Activa</option>
-                      <option value="en_proceso">⚙️ En Proceso</option>
-                      <option value="completada">✅ Completada</option>
-                      <option value="cancelada">❌ Cancelada</option>
-                    </select>
-                  </div>
-
-                  {order.notas && (
-                    <div className="detail-row notes">
-                      <span className="detail-label">Notas:</span>
-                      <span className="detail-value">{order.notas}</span>
-                    </div>
-                  )}
-
-                  <div className="detail-row date-info">
-                    <span className="detail-label">Creada:</span>
-                    <span className="detail-value">{formatDate(order.fechaCreacion)}</span>
-                  </div>
-
-                  {order.fechaCompletada && (
-                    <div className="detail-row date-info">
-                      <span className="detail-label">Completada:</span>
-                      <span className="detail-value">{formatDate(order.fechaCompletada)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                    </td>
+                    <td className="order-fecha">{formatDate(order.fechaLimite)}</td>
+                    <td className="order-estado">
+                      <select
+                        value={order.estado}
+                        onChange={(e) => updateOrderStatus(order._id, e.target.value as ProductionOrder['estado'])}
+                        className={`status-select-compact ${estadoBadge.class}`}
+                      >
+                        <option value="activa">🟢 Activa</option>
+                        <option value="en_proceso">⚙️ En Proceso</option>
+                        <option value="completada">✅ Completada</option>
+                        <option value="cancelada">❌ Cancelada</option>
+                      </select>
+                    </td>
+                    <td className="order-actions">
+                      <button
+                        onClick={() => deleteOrder(order._id)}
+                        className="delete-btn-small"
+                        title="Eliminar orden"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="empty-state">
