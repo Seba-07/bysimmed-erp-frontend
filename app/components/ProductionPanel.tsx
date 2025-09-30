@@ -843,7 +843,13 @@ export default function ProductionPanel() {
 
                           let materialUnit = ''
                           if (typeof unidad === 'string') {
-                            materialUnit = unidad
+                            // If it's a string and looks like a MongoDB ObjectId, ignore it
+                            // ObjectIds are 24 hex characters
+                            if (unidad.length === 24 && /^[a-f0-9]+$/i.test(unidad)) {
+                              materialUnit = ''
+                            } else {
+                              materialUnit = unidad
+                            }
                           } else if (unidad && typeof unidad === 'object') {
                             materialUnit = unidad.abreviatura || unidad.nombre || ''
                           }
