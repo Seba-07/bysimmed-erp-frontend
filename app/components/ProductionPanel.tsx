@@ -344,6 +344,15 @@ export default function ProductionPanel() {
     })
   }
 
+  const closeComponentsModal = () => {
+    // Pause the model before closing
+    if (showComponentsModal) {
+      const [orderId, productId] = showComponentsModal.split('-')
+      pauseModel(orderId, productId)
+    }
+    setShowComponentsModal(null)
+  }
+
   const resetModel = (orderId: string, productId: string) => {
     if (!confirm('¿Seguro que quieres reiniciar el cronómetro? Se perderá todo el progreso.')) return
 
@@ -647,7 +656,7 @@ export default function ProductionPanel() {
 
       {/* Modal de componentes */}
       {showComponentsModal && timers[showComponentsModal] && (
-        <div className="modal-overlay" onClick={() => setShowComponentsModal(null)}>
+        <div className="modal-overlay" onClick={closeComponentsModal}>
           <div className="modal-content components-modal" onClick={(e) => e.stopPropagation()}>
             <h3>🔧 Componentes en Fabricación</h3>
 
@@ -704,6 +713,8 @@ export default function ProductionPanel() {
                           <button
                             className="control-btn finish-btn"
                             onClick={() => completeComponent(orderId, productId, comp.uniqueId)}
+                            disabled={comp.status === 'pending'}
+                            title={comp.status === 'pending' ? 'Debes iniciar el componente primero' : 'Finalizar componente'}
                           >
                             ✅ Finalizar
                           </button>
@@ -719,7 +730,7 @@ export default function ProductionPanel() {
               })}
             </div>
 
-            <button className="button" onClick={() => setShowComponentsModal(null)}>
+            <button className="button" onClick={closeComponentsModal}>
               Cerrar
             </button>
           </div>
