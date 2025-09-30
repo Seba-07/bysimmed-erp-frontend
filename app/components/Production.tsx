@@ -334,6 +334,14 @@ export default function Production() {
       return
     }
 
+    // Asegurar que haya un número de orden
+    let numeroOrden = nextOrderNumber
+    if (!numeroOrden || numeroOrden === '') {
+      // Generar uno si no existe (fallback)
+      numeroOrden = generateNextOrderNumber(orders.length)
+      console.warn('⚠️ numeroOrden estaba vacío, generando fallback:', numeroOrden)
+    }
+
     try {
       // Limpiar los productos antes de enviar (remover componentName si existe)
       const cleanedProducts = orderForm.productos.map(prod => {
@@ -355,7 +363,7 @@ export default function Production() {
 
       // Usar el número de orden generado automáticamente
       const payload = {
-        numeroOrden: nextOrderNumber,
+        numeroOrden: numeroOrden,
         cliente: orderForm.cliente,
         fechaLimite: orderForm.fechaLimite,
         notas: orderForm.notas,
@@ -363,6 +371,7 @@ export default function Production() {
       }
 
       console.log('📤 Creando orden:', payload)
+      console.log('📋 numeroOrden:', numeroOrden)
 
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
@@ -469,7 +478,14 @@ export default function Production() {
           </select>
           <button
             className="button"
-            onClick={() => setShowNewOrderModal(true)}
+            onClick={() => {
+              // Asegurar que el número de orden esté generado antes de abrir modal
+              if (!nextOrderNumber || nextOrderNumber === '') {
+                const newOrderNum = generateNextOrderNumber(orders.length)
+                setNextOrderNumber(newOrderNum)
+              }
+              setShowNewOrderModal(true)
+            }}
           >
             ➕ Nueva Orden
           </button>
