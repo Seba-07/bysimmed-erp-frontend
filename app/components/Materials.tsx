@@ -2,12 +2,19 @@
 
 import { useState, useEffect } from 'react'
 
+interface Unit {
+  _id: string
+  nombre: string
+  abreviatura: string
+  tipo?: string
+}
+
 interface Material {
   _id: string
   nombre: string
   descripcion?: string
   imagen?: string
-  unidad: string
+  unidad: string | Unit
   stock: number
   precioUnitario: number
   fechaCreacion: string
@@ -21,8 +28,14 @@ interface MaterialResponse {
   message?: string
 }
 
+interface UnitResponse {
+  success: boolean
+  data?: Unit[]
+}
+
 export default function Materials() {
   const [materials, setMaterials] = useState<Material[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -34,11 +47,14 @@ export default function Materials() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showCustomUnit, setShowCustomUnit] = useState(false)
+  const [customUnit, setCustomUnit] = useState({ nombre: '', abreviatura: '', tipo: '' })
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
   useEffect(() => {
     loadMaterials()
+    loadUnits()
   }, [])
 
   const loadMaterials = async () => {
@@ -57,6 +73,47 @@ export default function Materials() {
       setError(err instanceof Error ? err.message : 'Error cargando materiales')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadUnits = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/inventory/units`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data: UnitResponse = await res.json()
+      if (data.success && Array.isArray(data.data)) {
+        setUnits(data.data)
+      }
+    } catch (err) {
+      console.error('Error cargando unidades:', err)
+    }
+  }
+
+  const handleAddCustomUnit = async () => {
+    if (!customUnit.nombre || !customUnit.abreviatura) {
+      alert('Nombre y abreviatura son requeridos')
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/inventory/units`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customUnit)
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = await res.json()
+      if (data.success && data.data) {
+        await loadUnits()
+        setForm({ ...form, unidad: data.data._id })
+        setCustomUnit({ nombre: '', abreviatura: '', tipo: '' })
+        setShowCustomUnit(false)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error creando unidad personalizada')
     }
   }
 
@@ -100,7 +157,7 @@ export default function Materials() {
     setForm({
       nombre: material.nombre,
       descripcion: material.descripcion || '',
-      unidad: material.unidad,
+      unidad: typeof material.unidad === 'string' ? material.unidad : material.unidad._id,
       stock: material.stock,
       precioUnitario: material.precioUnitario
     })
@@ -127,6 +184,14 @@ export default function Materials() {
     setEditingId(null)
   }
 
+  const getUnitDisplay = (unit: string | Unit) => {
+    if (typeof unit === 'object') {
+      return `${unit.nombre} (${unit.abreviatura})`
+    }
+    const foundUnit = units.find(u => u._id === unit)
+    return foundUnit ? `${foundUnit.nombre} (${foundUnit.abreviatura})` : 'Unidad desconocida'
+  }
+
   return (
     <div className="section">
       <h2>📦 Gestión de Materiales</h2>
@@ -147,21 +212,69 @@ export default function Materials() {
           onChange={(e) => setForm({...form, descripcion: e.target.value})}
           disabled={submitting}
         />
-        <input
-          type="text"
-          placeholder="Unidad (ej: kg, litros, unidades) *"
-          value={form.unidad}
-          onChange={(e) => setForm({...form, unidad: e.target.value})}
-          disabled={submitting}
-          required
-        />
+
+        <div className="unit-selector">
+          <select
+            value={form.unidad}
+            onChange={(e) => {
+              if (e.target.value === 'custom') {
+                setShowCustomUnit(true)
+              } else {
+                setForm({...form, unidad: e.target.value})
+              }
+            }}
+            disabled={submitting}
+            required
+          >
+            <option value="">Seleccionar unidad *</option>
+            {units.map(unit => (
+              <option key={unit._id} value={unit._id}>
+                {unit.nombre} ({unit.abreviatura})
+              </option>
+            ))}
+            <option value="custom">➕ Agregar unidad personalizada</option>
+          </select>
+
+          {showCustomUnit && (
+            <div className="custom-unit-form">
+              <input
+                type="text"
+                placeholder="Nombre de la unidad"
+                value={customUnit.nombre}
+                onChange={(e) => setCustomUnit({...customUnit, nombre: e.target.value})}
+              />
+              <input
+                type="text"
+                placeholder="Abreviatura (ej: kg, L, m)"
+                value={customUnit.abreviatura}
+                onChange={(e) => setCustomUnit({...customUnit, abreviatura: e.target.value})}
+              />
+              <input
+                type="text"
+                placeholder="Tipo (opcional: peso, volumen, etc.)"
+                value={customUnit.tipo}
+                onChange={(e) => setCustomUnit({...customUnit, tipo: e.target.value})}
+              />
+              <div className="form-actions">
+                <button type="button" onClick={handleAddCustomUnit} className="button small">
+                  Guardar Unidad
+                </button>
+                <button type="button" onClick={() => setShowCustomUnit(false)} className="button secondary small">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <input
           type="number"
-          placeholder="Stock"
+          placeholder="Stock / Cantidad disponible"
           value={form.stock}
           onChange={(e) => setForm({...form, stock: Number(e.target.value)})}
           disabled={submitting}
           min="0"
+          step="0.01"
         />
         <input
           type="number"
@@ -210,7 +323,7 @@ export default function Materials() {
               </div>
               {material.descripcion && <p className="description">{material.descripcion}</p>}
               <div className="card-details">
-                <p><strong>Unidad:</strong> {material.unidad}</p>
+                <p><strong>Unidad:</strong> {getUnitDisplay(material.unidad)}</p>
                 <p><strong>Stock:</strong> {material.stock}</p>
                 <p><strong>Precio:</strong> ${material.precioUnitario.toFixed(2)}</p>
                 <p className="date">📅 {new Date(material.fechaCreacion).toLocaleDateString()}</p>

@@ -43,29 +43,6 @@ export default function Home() {
         {activeTab === 'components' && <Components />}
         {activeTab === 'models' && <Models />}
       </div>
-
-      <div className="instructions">
-        <h3>🍎 Instalación en iPad/iPhone</h3>
-        <p>
-          Abre Safari → Pulsa el icono "Compartir" →
-          Selecciona "Añadir a pantalla de inicio"
-        </p>
-      </div>
-
-      <div className="instructions">
-        <h3>🤖 Instalación en Android</h3>
-        <p>
-          Abre Chrome → Menú (⋮) →
-          Selecciona "Añadir a pantalla de inicio"
-        </p>
-      </div>
-
-      <div className="instructions">
-        <h3>💻 Instalación en PC</h3>
-        <p>
-          Abre Chrome/Edge → Busca el icono "Instalar" en la barra de direcciones
-        </p>
-      </div>
     </main>
   )
 }
