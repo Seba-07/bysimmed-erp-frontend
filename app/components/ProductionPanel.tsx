@@ -359,20 +359,18 @@ export default function ProductionPanel() {
   const closeComponentsModal = () => {
     // Pause the model and all in-progress components before closing
     if (showComponentsModal) {
-      const [orderId, productId] = showComponentsModal.split('-')
-      const timerKey = getTimerKey(orderId, productId)
-      const timer = timers[timerKey]
+      const timer = timers[showComponentsModal]
 
       if (timer) {
         // Pause any in-progress components
         setTimers(prev => {
           const updated = {
             ...prev,
-            [timerKey]: {
-              ...prev[timerKey],
+            [showComponentsModal]: {
+              ...prev[showComponentsModal],
               status: 'paused' as const,
               startTime: null,
-              components: prev[timerKey].components.map(comp =>
+              components: prev[showComponentsModal].components.map(comp =>
                 comp.status === 'in_progress'
                   ? { ...comp, status: 'paused' as const, startTime: null }
                   : comp
@@ -822,7 +820,9 @@ export default function ProductionPanel() {
             <div className="components-list-modal">
               {timers[showComponentsModal].components.map((comp, idx) => {
                 const componentDetails = getComponentDetails(comp.componentId)
-                const [orderId, productId] = showComponentsModal.split('-')
+                const timer = timers[showComponentsModal]
+                const orderId = timer.orderId
+                const productId = timer.productId
 
                 return (
                   <div key={comp.uniqueId} className="component-card-modal">
