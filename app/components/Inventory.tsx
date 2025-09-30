@@ -134,6 +134,7 @@ export default function Inventory() {
 
       if (data.success) {
         const fullItem = { ...data.data, tipo: item.tipo }
+        console.log('Item cargado:', fullItem) // Debug
         setSelectedItem(fullItem)
         setEditData(fullItem)
         setShowDetailModal(true)
@@ -461,13 +462,36 @@ export default function Inventory() {
                 {editData.componentes && editData.componentes.length > 0 ? (
                   <div className="editable-components-list">
                     {editData.componentes.map((comp: any, idx: number) => {
-                      const componentId = comp.componenteId || comp.componente?._id
-                      const componentName = comp.componente?.nombre || allComponents.find((c: any) => c._id === componentId)?.nombre || 'Componente'
+                      // Extraer el ID del componente de diferentes formatos posibles
+                      let componentId: string | null = null
+                      let componentName = 'Componente desconocido'
+
+                      if (typeof comp.componenteId === 'string') {
+                        componentId = comp.componenteId
+                      } else if (comp.componenteId && typeof comp.componenteId === 'object') {
+                        componentId = comp.componenteId._id
+                        componentName = comp.componenteId.nombre || componentName
+                      } else if (comp.componente) {
+                        if (typeof comp.componente === 'string') {
+                          componentId = comp.componente
+                        } else {
+                          componentId = comp.componente._id
+                          componentName = comp.componente.nombre || componentName
+                        }
+                      }
+
+                      // Buscar el nombre en allComponents si no lo tenemos
+                      if (componentId && componentName === 'Componente desconocido') {
+                        const foundComp = allComponents.find((c: any) => c._id === componentId)
+                        if (foundComp) {
+                          componentName = foundComp.nombre
+                        }
+                      }
 
                       return (
                         <div key={idx} className="editable-component-item">
                           <div className="component-info">
-                            <span className="component-name-label">{componentName}</span>
+                            <span className="component-name-label">🔧 {componentName}</span>
                             <div className="component-quantity-control">
                               <label>Cantidad:</label>
                               <input
@@ -514,9 +538,13 @@ export default function Inventory() {
                           if (selectedComp) {
                             const newComponents = editData.componentes || []
                             // Evitar duplicados
-                            const exists = newComponents.some((c: any) =>
-                              (c.componenteId || c.componente?._id) === selectedComp._id
-                            )
+                            const exists = newComponents.some((c: any) => {
+                              const existingId =
+                                (typeof c.componenteId === 'string' ? c.componenteId : c.componenteId?._id) ||
+                                (typeof c.componente === 'string' ? c.componente : c.componente?._id)
+                              return existingId === selectedComp._id
+                            })
+
                             if (!exists) {
                               setEditData({
                                 ...editData,
