@@ -936,6 +936,8 @@ body {
 /* Production modal styles */
 .production-modal {
   max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .production-form {

@@ -180,13 +180,27 @@ export default function Production() {
 
             // Auto-llenar la lista de componentes
             const autoComponents = data.data.componentes.map((comp: any) => {
-              const compData = typeof comp.componenteId === 'string'
-                ? components.find(c => c._id === comp.componenteId)
-                : comp.componenteId
+              // Usar notación de corchetes para evitar problemas de serialización
+              const compId = comp['componenteId']
+              let componentName = 'Desconocido'
+              let componentIdValue = null
+
+              if (compId && compId._id && compId.nombre) {
+                // Es un objeto con datos
+                componentIdValue = compId._id
+                componentName = compId.nombre
+              } else if (compId && typeof compId === 'string') {
+                // Es un string ID, buscar en components
+                componentIdValue = compId
+                const foundComp = components.find(c => c._id === compId)
+                if (foundComp) {
+                  componentName = foundComp.nombre
+                }
+              }
 
               return {
-                componenteId: compData?._id || comp.componenteId,
-                componentName: compData?.nombre || 'Desconocido',
+                componenteId: componentIdValue || comp['componenteId'],
+                componentName: componentName,
                 cantidad: comp.cantidad
               }
             })
@@ -284,13 +298,36 @@ export default function Production() {
     }
 
     try {
+      // Limpiar los productos antes de enviar (remover componentName si existe)
+      const cleanedProducts = orderForm.productos.map(prod => ({
+        itemId: prod.itemId,
+        itemType: prod.itemType,
+        itemName: prod.itemName,
+        cantidad: prod.cantidad,
+        componentesSeleccionados: prod.componentesSeleccionados?.map(comp => ({
+          componenteId: comp.componenteId,
+          cantidad: comp.cantidad
+        }))
+      }))
+
+      const payload = {
+        ...orderForm,
+        productos: cleanedProducts
+      }
+
+      console.log('Payload enviado:', JSON.stringify(payload, null, 2))
+
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderForm)
+        body: JSON.stringify(payload)
       })
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Error del backend:', errorData)
+        throw new Error(`HTTP ${res.status}: ${errorData.message || 'Error desconocido'}`)
+      }
 
       const data = await res.json()
       if (data.success) {
