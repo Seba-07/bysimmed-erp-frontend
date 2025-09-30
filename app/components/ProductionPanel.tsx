@@ -202,7 +202,7 @@ export default function ProductionPanel() {
 
               const data = await res.json()
               if (data.success && data.data) {
-                console.log('Cached component data:', comp.componentId, data.data)
+                alert(`Cached component: ${comp.componentId}\nMateriales: ${JSON.stringify(data.data.materiales, null, 2)}`)
                 setComponentDetailsCache(prev => ({
                   ...prev,
                   [comp.componentId]: data.data
@@ -873,13 +873,15 @@ export default function ProductionPanel() {
                           const materialName = material?.nombre || 'Material'
                           const unidad = material?.unidad
 
-                          // Debug log to see what we're getting
-                          console.log('Material data:', {
-                            mat,
-                            material,
-                            unidad,
-                            unidadType: typeof unidad
-                          })
+                          // Debug alert for first material only
+                          if (matIdx === 0) {
+                            alert(`Material data:\n${JSON.stringify({
+                              materialName,
+                              cantidad: mat.cantidad,
+                              unidad,
+                              unidadType: typeof unidad
+                            }, null, 2)}`)
+                          }
 
                           let materialUnit = ''
                           if (typeof unidad === 'string') {
