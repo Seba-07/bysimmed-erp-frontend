@@ -355,16 +355,30 @@ export default function Production() {
         productos: cleanedProducts
       }
 
-      // Mostrar payload con alert para evitar problemas de cache
+      // Mostrar payload en elemento temporal para que se pueda copiar
+      const debugDiv = document.createElement('div')
+      debugDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);color:#0f0;padding:20px;overflow:auto;z-index:99999;font-family:monospace;font-size:12px;white-space:pre-wrap;'
+
       let debugInfo = `PAYLOAD COMPLETO:\n${JSON.stringify(payload, null, 2)}\n\n`
 
       if (payload.productos.length > 0 && payload.productos[0].componentesSeleccionados) {
         debugInfo += `TIPO componentesSeleccionados: ${typeof payload.productos[0].componentesSeleccionados}\n`
         debugInfo += `ES ARRAY: ${Array.isArray(payload.productos[0].componentesSeleccionados)}\n`
-        debugInfo += `PRIMER COMPONENTE: ${JSON.stringify(payload.productos[0].componentesSeleccionados[0], null, 2)}`
+        debugInfo += `PRIMER COMPONENTE: ${JSON.stringify(payload.productos[0].componentesSeleccionados[0], null, 2)}\n\n`
       }
 
-      alert(debugInfo)
+      debugInfo += '\n\n[Haz click en cualquier parte para cerrar y continuar]'
+      debugDiv.textContent = debugInfo
+      debugDiv.onclick = () => debugDiv.remove()
+      document.body.appendChild(debugDiv)
+
+      // Esperar a que el usuario cierre el debug
+      await new Promise(resolve => {
+        debugDiv.onclick = () => {
+          debugDiv.remove()
+          resolve(null)
+        }
+      })
 
       const res = await fetch(`${API_URL}/api/production/orders`, {
         method: 'POST',
