@@ -699,41 +699,58 @@ export default function ProductionPanel() {
                           <span className="product-name-compact">
                             {prod.itemType === 'Component' ? '🔧' : '🏭'} {prod.itemName} x{prod.cantidad}
                           </span>
-                          {timer && (
-                            <span className="timer-display">{formatTime(timer.elapsedTime)}</span>
-                          )}
+                          <span className="timer-display">{formatTime(timer?.elapsedTime || 0)}</span>
                         </div>
 
-                        {/* Production controls */}
+                        {/* Production controls - always show all buttons */}
                         <div className="production-controls">
-                          {!timer || timer.status === 'pending' ? (
-                            <button
-                              className="control-btn start-btn"
-                              onClick={() => startModel(order, prod)}
-                              title="Iniciar producción"
-                            >
-                              ▶️ Iniciar
-                            </button>
-                          ) : timer.status === 'in_progress' ? (
-                            <button
-                              className="control-btn pause-btn"
-                              onClick={() => pauseModel(order._id, prod.itemId)}
-                              title="Pausar"
-                            >
-                              ⏸️ Pausar
-                            </button>
-                          ) : timer.status === 'paused' ? (
-                            <button
-                              className="control-btn resume-btn"
-                              onClick={() => startModel(order, prod)}
-                              title="Reanudar"
-                            >
-                              ▶️ Reanudar
-                            </button>
-                          ) : null}
-
-                          {timer && timer.status !== 'completed' && (
+                          {!timer || timer.status === 'completed' ? (
+                            timer?.status === 'completed' ? (
+                              <span className="completed-badge">✅ Completado</span>
+                            ) : (
+                              <>
+                                <button
+                                  className="control-btn start-btn"
+                                  onClick={() => startModel(order, prod)}
+                                  title="Iniciar producción"
+                                >
+                                  ▶️ Iniciar
+                                </button>
+                                <button
+                                  className="control-btn reset-btn"
+                                  disabled
+                                  title="Reiniciar"
+                                >
+                                  🔄
+                                </button>
+                                <button
+                                  className="control-btn finish-btn"
+                                  disabled
+                                  title="Debe iniciar primero"
+                                >
+                                  ✅ Finalizar
+                                </button>
+                              </>
+                            )
+                          ) : (
                             <>
+                              {timer.status === 'in_progress' ? (
+                                <button
+                                  className="control-btn pause-btn"
+                                  onClick={() => pauseModel(order._id, prod.itemId)}
+                                  title="Pausar"
+                                >
+                                  ⏸️ Pausar
+                                </button>
+                              ) : (
+                                <button
+                                  className="control-btn resume-btn"
+                                  onClick={() => startModel(order, prod)}
+                                  title="Reanudar"
+                                >
+                                  ▶️ Reanudar
+                                </button>
+                              )}
                               <button
                                 className="control-btn reset-btn"
                                 onClick={() => resetModel(order._id, prod.itemId)}
@@ -750,10 +767,6 @@ export default function ProductionPanel() {
                                 ✅ Finalizar
                               </button>
                             </>
-                          )}
-
-                          {timer && timer.status === 'completed' && (
-                            <span className="completed-badge">✅ Completado</span>
                           )}
                         </div>
                       </div>
