@@ -177,7 +177,28 @@ export default function ProductionPanel() {
 
   const getTimerKey = (orderId: string, productId: string) => `${orderId}-${productId}`
 
-  const startModel = (order: ProductionOrder, product: OrderProduct) => {
+  const updateOrderStatus = async (orderId: string, estado: 'en_proceso' | 'completada') => {
+    try {
+      const res = await fetch(`${API_URL}/api/production/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = await res.json()
+      if (data.success) {
+        // Update local state
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, estado } : o))
+      }
+    } catch (err) {
+      console.error('Error actualizando estado de orden:', err)
+      alert(`Error al actualizar estado: ${err instanceof Error ? err.message : 'Error desconocido'}`)
+    }
+  }
+
+  const startModel = async (order: ProductionOrder, product: OrderProduct) => {
     const timerKey = getTimerKey(order._id, product.itemId)
 
     // Initialize timer if doesn't exist
@@ -204,6 +225,11 @@ export default function ProductionPanel() {
           components: componentTimers
         }
       }))
+
+      // Update order status to 'en_proceso' if it's still 'activa'
+      if (order.estado === 'activa') {
+        await updateOrderStatus(order._id, 'en_proceso')
+      }
 
       // Show components modal
       setShowComponentsModal(timerKey)
@@ -256,7 +282,15 @@ export default function ProductionPanel() {
     }))
   }
 
-  const completeModel = (orderId: string, productId: string) => {
+  const allProductsCompletedInOrder = (orderId: string, orderProducts: OrderProduct[]) => {
+    return orderProducts.every(prod => {
+      const timerKey = getTimerKey(orderId, prod.itemId)
+      const timer = timers[timerKey]
+      return timer && timer.status === 'completed'
+    })
+  }
+
+  const completeModel = async (orderId: string, productId: string) => {
     const timerKey = getTimerKey(orderId, productId)
     setTimers(prev => ({
       ...prev,
@@ -267,6 +301,22 @@ export default function ProductionPanel() {
       }
     }))
     setShowComponentsModal(null)
+
+    // Check if all products in the order are completed
+    const order = orders.find(o => o._id === orderId)
+    if (order) {
+      // Need to check with updated timers state
+      setTimeout(() => {
+        const allCompleted = allProductsCompletedInOrder(orderId, order.productos)
+        if (allCompleted) {
+          if (confirm(`✅ Todos los productos de la orden ${order.numeroOrden} han sido fabricados.\n\n¿Confirmar que la orden está completada?`)) {
+            updateOrderStatus(orderId, 'completada')
+            // Remove order from view
+            setOrders(prev => prev.filter(o => o._id !== orderId))
+          }
+        }
+      }, 100)
+    }
   }
 
   const startComponent = (orderId: string, productId: string, componentId: string) => {
