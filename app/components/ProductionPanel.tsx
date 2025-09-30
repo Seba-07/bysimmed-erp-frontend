@@ -202,7 +202,6 @@ export default function ProductionPanel() {
 
               const data = await res.json()
               if (data.success && data.data) {
-                alert(`Cached component: ${comp.componentId}\nMateriales: ${JSON.stringify(data.data.materiales, null, 2)}`)
                 setComponentDetailsCache(prev => ({
                   ...prev,
                   [comp.componentId]: data.data
@@ -873,27 +872,23 @@ export default function ProductionPanel() {
                           const materialName = material?.nombre || 'Material'
                           const unidad = material?.unidad
 
-                          // Debug alert for first material only
-                          if (matIdx === 0) {
-                            alert(`Material data:\n${JSON.stringify({
-                              materialName,
-                              cantidad: mat.cantidad,
-                              unidad,
-                              unidadType: typeof unidad
-                            }, null, 2)}`)
-                          }
-
                           let materialUnit = ''
                           if (typeof unidad === 'string') {
-                            // If it's a string and looks like a MongoDB ObjectId, ignore it
-                            // ObjectIds are 24 hex characters
+                            // If it's a string and looks like a MongoDB ObjectId, don't show anything
+                            // This means backend didn't populate the unit data
                             if (unidad.length === 24 && /^[a-f0-9]+$/i.test(unidad)) {
-                              materialUnit = ''
+                              // Skip this material - no valid unit data
+                              return null
                             } else {
                               materialUnit = unidad
                             }
                           } else if (unidad && typeof unidad === 'object') {
                             materialUnit = unidad.abreviatura || unidad.nombre || ''
+                          }
+
+                          // Only show if we have valid data
+                          if (!materialName || materialName === 'Material') {
+                            return null
                           }
 
                           return (
