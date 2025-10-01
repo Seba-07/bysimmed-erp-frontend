@@ -62,7 +62,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
   const [editData, setEditData] = useState<any>(null)
   const [newPresentacion, setNewPresentacion] = useState({ nombre: '', factorConversion: 0, precioCompra: 0 })
   const [showRestockModal, setShowRestockModal] = useState(false)
-  const [restockForm, setRestockForm] = useState({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
+  const [restockForm, setRestockForm] = useState({ materialId: '', presentacion: '', cantidad: 1, solicitante: '', prioridad: 'media' as 'baja' | 'media' | 'urgente', notas: '' })
   const [units, setUnits] = useState<Unit[]>([])
   const [allMaterials, setAllMaterials] = useState<Material[]>([])
   const [allComponents, setAllComponents] = useState<Component[]>([])
@@ -244,8 +244,8 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
   }
 
   const handleRestockRequest = async () => {
-    if (!restockForm.materialId || !restockForm.presentacion || restockForm.cantidad < 1) {
-      alert('Debes seleccionar un material, una presentación y una cantidad válida')
+    if (!restockForm.materialId || !restockForm.presentacion || restockForm.cantidad < 1 || !restockForm.solicitante) {
+      alert('Debes completar todos los campos requeridos (material, presentación, cantidad y solicitante)')
       return
     }
 
@@ -261,7 +261,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
       if (data.success) {
         setShowRestockModal(false)
-        setRestockForm({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
+        setRestockForm({ materialId: '', presentacion: '', cantidad: 1, solicitante: '', prioridad: 'media', notas: '' })
         alert('✅ Solicitud de reposición creada exitosamente')
         await loadAllInventory()
       } else {
@@ -284,7 +284,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             className="button secondary"
             onClick={() => setShowRestockModal(true)}
           >
-            📦 Reponer Stock
+            📦 Reponer Inventario
           </button>
           <button
             className="button"
@@ -924,11 +924,12 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
       {showRestockModal && (
         <div className="modal-overlay" onClick={() => setShowRestockModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>📦 Solicitar Reposición de Stock</h3>
+            <h3>📦 Solicitar Reposición de Inventario</h3>
 
             <div className="form-group">
               <label>Material a Reponer *</label>
               <select
+                className="form-select"
                 value={restockForm.materialId}
                 onChange={(e) => {
                   setRestockForm({ ...restockForm, materialId: e.target.value, presentacion: '' })
@@ -951,6 +952,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 <div className="form-group">
                   <label>Presentación de Compra *</label>
                   <select
+                    className="form-select"
                     value={restockForm.presentacion}
                     onChange={(e) => setRestockForm({ ...restockForm, presentacion: e.target.value })}
                     required
@@ -972,6 +974,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 <div className="form-group">
                   <label>Cantidad a Solicitar *</label>
                   <input
+                    className="form-input"
                     type="number"
                     value={restockForm.cantidad}
                     onChange={(e) => setRestockForm({ ...restockForm, cantidad: parseInt(e.target.value) || 1 })}
@@ -979,18 +982,40 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                     step="1"
                     required
                   />
-                  <p className="help-text">
-                    Cantidad de unidades de la presentación seleccionada
-                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label>Solicitante *</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    value={restockForm.solicitante}
+                    onChange={(e) => setRestockForm({ ...restockForm, solicitante: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Prioridad *</label>
+                  <select
+                    className="form-select"
+                    value={restockForm.prioridad}
+                    onChange={(e) => setRestockForm({ ...restockForm, prioridad: e.target.value as 'baja' | 'media' | 'urgente' })}
+                    required
+                  >
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
                   <label>Notas (opcional)</label>
                   <textarea
+                    className="form-textarea"
                     value={restockForm.notas}
                     onChange={(e) => setRestockForm({ ...restockForm, notas: e.target.value })}
                     rows={3}
-                    placeholder="Agrega notas adicionales para la solicitud..."
                   />
                 </div>
               </>
@@ -1003,7 +1028,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
               <button
                 onClick={() => {
                   setShowRestockModal(false)
-                  setRestockForm({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
+                  setRestockForm({ materialId: '', presentacion: '', cantidad: 1, solicitante: '', prioridad: 'media', notas: '' })
                 }}
                 className="button secondary"
               >

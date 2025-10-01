@@ -21,6 +21,8 @@ interface RestockRequest {
   materialId: Material
   presentacion: string
   cantidad: number
+  solicitante: string
+  prioridad: 'baja' | 'media' | 'urgente'
   estado: 'pendiente' | 'en_revision' | 'en_gestion' | 'en_transito' | 'entregado' | 'cancelada'
   fechaSolicitud: string
   fechaRevision?: string
@@ -215,6 +217,8 @@ export default function RestockManagement() {
               </div>
 
               <div className="request-details">
+                <p><strong>Solicitante:</strong> {request.solicitante}</p>
+                <p><strong>Prioridad:</strong> <span className={`prioridad-${request.prioridad}`}>{request.prioridad.charAt(0).toUpperCase() + request.prioridad.slice(1)}</span></p>
                 <p><strong>Presentación:</strong> {request.presentacion}</p>
                 <p><strong>Cantidad:</strong> {request.cantidad} unidades</p>
                 <p><strong>Solicitado:</strong> {formatDate(request.fechaSolicitud)}</p>
@@ -236,6 +240,12 @@ export default function RestockManagement() {
               <p><strong>{selectedRequest.materialId.nombre}</strong></p>
               <p>Presentación: {selectedRequest.presentacion}</p>
               <p>Cantidad: {selectedRequest.cantidad} unidades</p>
+            </div>
+
+            <div className="request-detail-section">
+              <h4>Información de Solicitud</h4>
+              <p><strong>Solicitante:</strong> {selectedRequest.solicitante}</p>
+              <p><strong>Prioridad:</strong> <span className={`prioridad-${selectedRequest.prioridad}`}>{selectedRequest.prioridad.charAt(0).toUpperCase() + selectedRequest.prioridad.slice(1)}</span></p>
             </div>
 
             <div className="request-detail-section">

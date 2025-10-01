@@ -2484,6 +2484,39 @@ body {
   color: #e2e8f0;
 }
 
+/* Form input styles */
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-select option {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
 /* Restock request styles */
 .header-buttons {
   display: flex;
@@ -2673,6 +2706,21 @@ body {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.prioridad-baja {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.prioridad-media {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.prioridad-urgente {
+  color: #ef4444;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
