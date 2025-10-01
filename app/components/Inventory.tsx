@@ -12,6 +12,7 @@ interface Material {
   _id: string
   nombre: string
   descripcion?: string
+  categoria: 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona'
   unidad: string | Unit
   stock: number
   precioUnitario: number
@@ -55,6 +56,7 @@ export default function Inventory() {
   const [units, setUnits] = useState<Unit[]>([])
   const [allMaterials, setAllMaterials] = useState<Material[]>([])
   const [allComponents, setAllComponents] = useState<Component[]>([])
+  const [categoriaFilter, setCategoriaFilter] = useState<string>('Todas')
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -242,7 +244,7 @@ export default function Inventory() {
           className={`tab ${activeTab === 'materials' ? 'active' : ''}`}
           onClick={() => setActiveTab('materials')}
         >
-          📦 Materiales ({materials.length})
+          📦 Materiales ({materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).length})
         </button>
         <button
           className={`tab ${activeTab === 'components' ? 'active' : ''}`}
@@ -265,15 +267,35 @@ export default function Inventory() {
           {/* MATERIALES */}
           {activeTab === 'materials' && (
             <div>
-              {materials.length > 0 ? (
+              <div className="filter-section">
+                <label>Filtrar por categoría:</label>
+                <select
+                  value={categoriaFilter}
+                  onChange={(e) => setCategoriaFilter(e.target.value)}
+                  className="categoria-filter"
+                >
+                  <option value="Todas">Todas</option>
+                  <option value="Silicona">Silicona</option>
+                  <option value="Resina">Resina</option>
+                  <option value="Filamentos">Filamentos</option>
+                  <option value="Pegamentos">Pegamentos</option>
+                  <option value="Aditivos">Aditivos</option>
+                  <option value="Accesorios">Accesorios</option>
+                  <option value="Limpieza">Limpieza</option>
+                </select>
+              </div>
+              {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).length > 0 ? (
                 <div className="inventory-grid">
-                  {materials.map((material) => (
+                  {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).map((material) => (
                     <div
                       key={material._id}
                       className="inventory-item clickable"
                       onClick={() => handleItemClick(material)}
                     >
-                      <h4>{material.nombre}</h4>
+                      <div className="material-header">
+                        <h4>{material.nombre}</h4>
+                        <span className="categoria-badge">{material.categoria}</span>
+                      </div>
                       {material.descripcion && <p className="description">{material.descripcion}</p>}
                       <div className="item-details">
                         <span className="detail-badge">Cantidad: {material.stock} {getUnitDisplay(material.unidad)}</span>
@@ -282,7 +304,7 @@ export default function Inventory() {
                   ))}
                 </div>
               ) : (
-                <p className="empty-message">No hay materiales registrados</p>
+                <p className="empty-message">No hay materiales{categoriaFilter !== 'Todas' ? ` en la categoría ${categoriaFilter}` : ' registrados'}</p>
               )}
             </div>
           )}
@@ -424,19 +446,36 @@ export default function Inventory() {
             </div>
 
             {selectedItem.tipo === 'material' && (
-              <div className="form-group">
-                <label>Unidad</label>
-                <select
-                  value={typeof editData.unidad === 'object' ? editData.unidad._id : editData.unidad}
-                  onChange={(e) => setEditData({ ...editData, unidad: e.target.value })}
-                >
-                  {units.map((unit) => (
-                    <option key={unit._id} value={unit._id}>
-                      {unit.nombre} ({unit.abreviatura})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div className="form-group">
+                  <label>Categoría</label>
+                  <select
+                    value={editData.categoria || 'Silicona'}
+                    onChange={(e) => setEditData({ ...editData, categoria: e.target.value })}
+                  >
+                    <option value="Silicona">Silicona</option>
+                    <option value="Resina">Resina</option>
+                    <option value="Filamentos">Filamentos</option>
+                    <option value="Pegamentos">Pegamentos</option>
+                    <option value="Aditivos">Aditivos</option>
+                    <option value="Accesorios">Accesorios</option>
+                    <option value="Limpieza">Limpieza</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Unidad</label>
+                  <select
+                    value={typeof editData.unidad === 'object' ? editData.unidad._id : editData.unidad}
+                    onChange={(e) => setEditData({ ...editData, unidad: e.target.value })}
+                  >
+                    {units.map((unit) => (
+                      <option key={unit._id} value={unit._id}>
+                        {unit.nombre} ({unit.abreviatura})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
 
             {selectedItem.tipo === 'component' && (
