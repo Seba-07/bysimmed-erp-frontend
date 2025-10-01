@@ -589,7 +589,6 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                           <div className="presentacion-info">
                             <strong>{pres.nombre}</strong>
                             <span>1 unidad = {pres.factorConversion} {getUnidadBase(selectedItem as Material)}</span>
-                            {pres.precioCompra ? <span>Precio: ${pres.precioCompra}</span> : null}
                           </div>
                           <button
                             type="button"
@@ -623,14 +622,6 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                         onChange={(e) => setNewPresentacion({ ...newPresentacion, factorConversion: parseFloat(e.target.value) || 0 })}
                         min="0"
                         step="0.01"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Precio (opcional)"
-                        value={newPresentacion.precioCompra || ''}
-                        onChange={(e) => setNewPresentacion({ ...newPresentacion, precioCompra: parseFloat(e.target.value) || 0 })}
-                        min="0"
-                        step="1"
                       />
                       <button
                         type="button"
