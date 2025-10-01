@@ -2484,6 +2484,36 @@ body {
   color: #e2e8f0;
 }
 
+/* Restock request styles */
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pending-restock {
+  border-left: 4px solid #f59e0b !important;
+  background: linear-gradient(135deg, #1e293b 0%, #1e293b 95%, #f59e0b 95%, #f59e0b 100%) !important;
+}
+
+.header-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.restock-badge {
+  background: #f59e0b;
+  color: #000;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: help;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .add-presentacion-form {
     grid-template-columns: 1fr;
@@ -2492,5 +2522,14 @@ body {
   .unit-selector-with-delete {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-buttons .button {
+    width: 100%;
   }
 }

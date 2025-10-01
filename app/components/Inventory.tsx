@@ -19,6 +19,8 @@ interface Material {
   tipo: 'material'
   materiales?: any[]
   presentaciones?: Array<{ nombre: string, factorConversion: number, precioCompra?: number }>
+  hasPendingRestock?: boolean
+  pendingRestockCount?: number
 }
 
 interface Component {
@@ -55,6 +57,8 @@ export default function Inventory() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [editData, setEditData] = useState<any>(null)
   const [newPresentacion, setNewPresentacion] = useState({ nombre: '', factorConversion: 0, precioCompra: 0 })
+  const [showRestockModal, setShowRestockModal] = useState(false)
+  const [restockForm, setRestockForm] = useState({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
   const [units, setUnits] = useState<Unit[]>([])
   const [allMaterials, setAllMaterials] = useState<Material[]>([])
   const [allComponents, setAllComponents] = useState<Component[]>([])
@@ -235,17 +239,56 @@ export default function Inventory() {
     }
   }
 
+  const handleRestockRequest = async () => {
+    if (!restockForm.materialId || !restockForm.presentacion || restockForm.cantidad < 1) {
+      alert('Debes seleccionar un material, una presentación y una cantidad válida')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/api/inventory/restock-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(restockForm)
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setShowRestockModal(false)
+        setRestockForm({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
+        alert('✅ Solicitud de reposición creada exitosamente')
+        await loadAllInventory()
+      } else {
+        setError(data.message || 'Error creando solicitud')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error creando solicitud')
+    } finally {
+      setLoading(false)
+    }
+  }
+
 
   return (
     <div className="section">
       <div className="inventory-header">
         <h2>📊 Inventario General</h2>
-        <button
-          className="button"
-          onClick={() => setShowNewItemModal(true)}
-        >
-          ➕ Nuevo Producto
-        </button>
+        <div className="header-buttons">
+          <button
+            className="button secondary"
+            onClick={() => setShowRestockModal(true)}
+          >
+            📦 Reponer Stock
+          </button>
+          <button
+            className="button"
+            onClick={() => setShowNewItemModal(true)}
+          >
+            ➕ Nuevo Producto
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -305,12 +348,19 @@ export default function Inventory() {
                   {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).map((material) => (
                     <div
                       key={material._id}
-                      className="inventory-item clickable"
+                      className={`inventory-item clickable ${material.hasPendingRestock ? 'pending-restock' : ''}`}
                       onClick={() => handleItemClick(material)}
                     >
                       <div className="material-header">
                         <h4>{material.nombre}</h4>
-                        <span className="categoria-badge">{material.categoria}</span>
+                        <div className="header-badges">
+                          <span className="categoria-badge">{material.categoria}</span>
+                          {material.hasPendingRestock && (
+                            <span className="restock-badge" title={`${material.pendingRestockCount} solicitud(es) pendiente(s)`}>
+                              📦 Reposición Solicitada
+                            </span>
+                          )}
+                        </div>
                       </div>
                       {material.descripcion && <p className="description">{material.descripcion}</p>}
                       <div className="item-details">
@@ -841,6 +891,100 @@ export default function Inventory() {
                 onClick={() => {
                   setShowDetailModal(false)
                   setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
+                }}
+                className="button secondary"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de solicitud de reposición */}
+      {showRestockModal && (
+        <div className="modal-overlay" onClick={() => setShowRestockModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>📦 Solicitar Reposición de Stock</h3>
+
+            <div className="form-group">
+              <label>Material a Reponer *</label>
+              <select
+                value={restockForm.materialId}
+                onChange={(e) => {
+                  setRestockForm({ ...restockForm, materialId: e.target.value, presentacion: '' })
+                }}
+                required
+              >
+                <option value="">Selecciona un material...</option>
+                {materials
+                  .filter(m => m.presentaciones && m.presentaciones.length > 0)
+                  .map(material => (
+                    <option key={material._id} value={material._id}>
+                      {material.nombre} - Stock actual: {material.stock} {typeof material.unidadBase === 'object' ? material.unidadBase.abreviatura : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {restockForm.materialId && (
+              <>
+                <div className="form-group">
+                  <label>Presentación de Compra *</label>
+                  <select
+                    value={restockForm.presentacion}
+                    onChange={(e) => setRestockForm({ ...restockForm, presentacion: e.target.value })}
+                    required
+                  >
+                    <option value="">Selecciona una presentación...</option>
+                    {materials
+                      .find(m => m._id === restockForm.materialId)
+                      ?.presentaciones?.map((pres, idx) => (
+                        <option key={idx} value={pres.nombre}>
+                          {pres.nombre} ({pres.factorConversion} {typeof materials.find(m => m._id === restockForm.materialId)?.unidadBase === 'object'
+                            ? (materials.find(m => m._id === restockForm.materialId)?.unidadBase as Unit).abreviatura
+                            : ''})
+                          {pres.precioCompra ? ` - $${pres.precioCompra}` : ''}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Cantidad a Solicitar *</label>
+                  <input
+                    type="number"
+                    value={restockForm.cantidad}
+                    onChange={(e) => setRestockForm({ ...restockForm, cantidad: parseInt(e.target.value) || 1 })}
+                    min="1"
+                    step="1"
+                    required
+                  />
+                  <p className="help-text">
+                    Cantidad de unidades de la presentación seleccionada
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label>Notas (opcional)</label>
+                  <textarea
+                    value={restockForm.notas}
+                    onChange={(e) => setRestockForm({ ...restockForm, notas: e.target.value })}
+                    rows={3}
+                    placeholder="Agrega notas adicionales para la solicitud..."
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="modal-actions">
+              <button onClick={handleRestockRequest} className="button" disabled={loading || !restockForm.materialId || !restockForm.presentacion}>
+                {loading ? 'Enviando...' : '✅ Crear Solicitud'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRestockModal(false)
+                  setRestockForm({ materialId: '', presentacion: '', cantidad: 1, notas: '' })
                 }}
                 className="button secondary"
               >
