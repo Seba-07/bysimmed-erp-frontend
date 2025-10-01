@@ -570,9 +570,9 @@ body {
   flex: 1;
 }
 
-.form-group-row {
+.detail-modal .form-group-row {
   display: grid;
-  grid-template-columns: minmax(140px, 28%) 120px auto 1fr;
+  grid-template-columns: minmax(140px, 180px) 120px auto 1fr;
   gap: 1rem;
   margin-bottom: 1rem;
   align-items: flex-start;
