@@ -37,7 +37,11 @@ interface MaterialResponse {
   data?: Material[]
 }
 
-export default function Components() {
+interface ComponentsProps {
+  onCreated?: () => void
+}
+
+export default function Components({ onCreated }: ComponentsProps) {
   const [components, setComponents] = useState<Component[]>([])
   const [availableMaterials, setAvailableMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(false)
@@ -145,9 +149,13 @@ export default function Components() {
       if (data.success) {
         setForm({ nombre: '', descripcion: '', stock: 0, precioUnitario: 0 })
         setMaterialsList([])
+        const isCreating = !editingId
         setEditingId(null)
         loadComponents()
         alert(editingId ? '✅ Componente actualizado exitosamente' : '✅ Componente creado exitosamente')
+        if (isCreating && onCreated) {
+          onCreated()
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando componente')

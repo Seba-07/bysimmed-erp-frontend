@@ -36,7 +36,11 @@ interface ComponentResponse {
   data?: Component[]
 }
 
-export default function Models() {
+interface ModelsProps {
+  onCreated?: () => void
+}
+
+export default function Models({ onCreated }: ModelsProps) {
   const [models, setModels] = useState<Model[]>([])
   const [availableComponents, setAvailableComponents] = useState<Component[]>([])
   const [loading, setLoading] = useState(false)
@@ -144,9 +148,13 @@ export default function Models() {
       if (data.success) {
         setForm({ nombre: '', descripcion: '', stock: 0, precioUnitario: 0 })
         setComponentsList([])
+        const isCreating = !editingId
         setEditingId(null)
         loadModels()
         alert(editingId ? '✅ Modelo actualizado exitosamente' : '✅ Modelo creado exitosamente')
+        if (isCreating && onCreated) {
+          onCreated()
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando modelo')

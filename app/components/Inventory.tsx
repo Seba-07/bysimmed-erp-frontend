@@ -54,6 +54,7 @@ export default function Inventory() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [editData, setEditData] = useState<any>(null)
+  const [newPresentacion, setNewPresentacion] = useState({ nombre: '', factorConversion: 0, precioCompra: 0 })
   const [units, setUnits] = useState<Unit[]>([])
   const [allMaterials, setAllMaterials] = useState<Material[]>([])
   const [allComponents, setAllComponents] = useState<Component[]>([])
@@ -146,6 +147,10 @@ export default function Inventory() {
       if (data.success) {
         const fullItem = { ...data.data, tipo: item.tipo }
         setSelectedItem(fullItem)
+        // Asegurar que presentaciones esté inicializado para materiales
+        if (item.tipo === 'material' && !fullItem.presentaciones) {
+          fullItem.presentaciones = []
+        }
         setEditData(fullItem)
         setShowDetailModal(true)
       }
@@ -182,6 +187,7 @@ export default function Inventory() {
         setShowDetailModal(false)
         setSelectedItem(null)
         setEditData(null)
+        setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
         await loadAllInventory()
       } else {
         setError(data.message || 'Error actualizando')
@@ -217,6 +223,7 @@ export default function Inventory() {
         setShowDetailModal(false)
         setSelectedItem(null)
         setEditData(null)
+        setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
         await loadAllInventory()
       } else {
         setError(data.message || 'Error eliminando')
@@ -502,19 +509,79 @@ export default function Inventory() {
                     ))}
                   </select>
                 </div>
-                {editData.presentaciones && editData.presentaciones.length > 0 && (
-                  <div className="form-group">
-                    <label>Presentaciones de Compra</label>
-                    <div className="presentaciones-readonly">
-                      {editData.presentaciones.map((pres: any, idx: number) => (
-                        <div key={idx} className="presentacion-readonly-item">
-                          <strong>{pres.nombre}</strong>: {pres.factorConversion} {getUnidadBase(selectedItem as Material)}
+                <div className="form-group">
+                  <label>Presentaciones de Compra</label>
+                  <div className="presentaciones-editable">
+                    {editData.presentaciones && editData.presentaciones.length > 0 ? (
+                      editData.presentaciones.map((pres: any, idx: number) => (
+                        <div key={idx} className="presentacion-item">
+                          <div className="presentacion-info">
+                            <strong>{pres.nombre}</strong>
+                            <span>1 unidad = {pres.factorConversion} {getUnidadBase(selectedItem as Material)}</span>
+                            {pres.precioCompra ? <span>Precio: ${pres.precioCompra}</span> : null}
+                          </div>
+                          <button
+                            type="button"
+                            className="remove-component-inline-btn"
+                            onClick={() => {
+                              const newPresentaciones = editData.presentaciones.filter((_: any, i: number) => i !== idx)
+                              setEditData({ ...editData, presentaciones: newPresentaciones })
+                            }}
+                            title="Eliminar presentación"
+                          >
+                            ✕
+                          </button>
                         </div>
-                      ))}
-                      <p className="help-text">Para editar presentaciones, ve a Gestión de Materiales</p>
+                      ))
+                    ) : (
+                      <p className="help-text">No hay presentaciones agregadas</p>
+                    )}
+
+                    {/* Formulario para agregar nueva presentación */}
+                    <div className="add-presentacion-form">
+                      <input
+                        type="text"
+                        placeholder="Nombre (ej: Frasco 2 libras)"
+                        value={newPresentacion.nombre}
+                        onChange={(e) => setNewPresentacion({ ...newPresentacion, nombre: e.target.value })}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Factor de conversión"
+                        value={newPresentacion.factorConversion || ''}
+                        onChange={(e) => setNewPresentacion({ ...newPresentacion, factorConversion: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        step="0.01"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Precio (opcional)"
+                        value={newPresentacion.precioCompra || ''}
+                        onChange={(e) => setNewPresentacion({ ...newPresentacion, precioCompra: parseFloat(e.target.value) || 0 })}
+                        min="0"
+                        step="1"
+                      />
+                      <button
+                        type="button"
+                        className="button-small"
+                        onClick={() => {
+                          if (!newPresentacion.nombre || newPresentacion.factorConversion <= 0) {
+                            alert('Debes ingresar un nombre y un factor de conversión válido')
+                            return
+                          }
+                          const currentPresentaciones = editData.presentaciones || []
+                          setEditData({
+                            ...editData,
+                            presentaciones: [...currentPresentaciones, { ...newPresentacion }]
+                          })
+                          setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
+                        }}
+                      >
+                        ➕ Agregar
+                      </button>
                     </div>
                   </div>
-                )}
+                </div>
               </>
             )}
 
@@ -770,7 +837,13 @@ export default function Inventory() {
               <button onClick={handleDeleteItem} className="button danger" disabled={loading}>
                 Eliminar
               </button>
-              <button onClick={() => setShowDetailModal(false)} className="button secondary">
+              <button
+                onClick={() => {
+                  setShowDetailModal(false)
+                  setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
+                }}
+                className="button secondary"
+              >
                 Cancelar
               </button>
             </div>

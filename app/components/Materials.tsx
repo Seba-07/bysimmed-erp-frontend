@@ -41,7 +41,11 @@ interface UnitResponse {
   data?: Unit[]
 }
 
-export default function Materials() {
+interface MaterialsProps {
+  onCreated?: () => void
+}
+
+export default function Materials({ onCreated }: MaterialsProps) {
   const [units, setUnits] = useState<Unit[]>([])
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -132,7 +136,11 @@ export default function Materials() {
       if (data.success) {
         setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
         setEditingId(null)
+        const isCreating = !editingId
         alert(editingId ? '✅ Material actualizado exitosamente' : '✅ Material creado exitosamente')
+        if (isCreating && onCreated) {
+          onCreated()
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error guardando material')

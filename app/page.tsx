@@ -65,9 +65,9 @@ export default function Home() {
         {activeTab === 'inventory' && <Inventory />}
         {activeTab === 'production' && <Production />}
         {activeTab === 'production-panel' && <ProductionPanel />}
-        {activeTab === 'materials' && <Materials />}
-        {activeTab === 'components' && <Components />}
-        {activeTab === 'models' && <Models />}
+        {activeTab === 'materials' && <Materials onCreated={() => setActiveTab('inventory')} />}
+        {activeTab === 'components' && <Components onCreated={() => setActiveTab('inventory')} />}
+        {activeTab === 'models' && <Models onCreated={() => setActiveTab('inventory')} />}
       </div>
     </main>
   )
