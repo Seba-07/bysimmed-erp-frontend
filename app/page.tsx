@@ -7,6 +7,7 @@ import Components from './components/Components'
 import Models from './components/Models'
 import Production from './components/Production'
 import ProductionPanel from './components/ProductionPanel'
+import ServiceWorkerUpdater from './components/ServiceWorkerUpdater'
 
 type Tab = 'inventory' | 'production' | 'production-panel' | 'materials' | 'components' | 'models'
 
@@ -35,6 +36,7 @@ export default function Home() {
 
   return (
     <main className="container">
+      <ServiceWorkerUpdater />
       <h1 className="logo">bySIMMED — ERP</h1>
       <p className="subtitle">Sistema de Gestión de Inventario y Producción</p>
 
