@@ -9,15 +9,22 @@ interface Unit {
   tipo?: string
 }
 
+interface Presentacion {
+  nombre: string
+  factorConversion: number
+  precioCompra?: number
+}
+
 interface Material {
   _id: string
   nombre: string
   descripcion?: string
   imagen?: string
   categoria: 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona'
-  unidad: string | Unit
+  unidadBase: string | Unit
   stock: number
   precioUnitario: number
+  presentaciones: Presentacion[]
   fechaCreacion: string
   fechaActualizacion: string
 }
@@ -41,13 +48,15 @@ export default function Materials() {
     nombre: '',
     descripcion: '',
     categoria: 'Silicona' as 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona',
-    unidad: '',
-    stock: 0
+    unidadBase: '',
+    stock: 0,
+    presentaciones: [] as Presentacion[]
   })
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showCustomUnit, setShowCustomUnit] = useState(false)
   const [customUnit, setCustomUnit] = useState({ nombre: '', abreviatura: '', tipo: '' })
+  const [newPresentacion, setNewPresentacion] = useState({ nombre: '', factorConversion: 0, precioCompra: 0 })
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -87,7 +96,7 @@ export default function Materials() {
       const data = await res.json()
       if (data.success && data.data) {
         await loadUnits()
-        setForm({ ...form, unidad: data.data._id })
+        setForm({ ...form, unidadBase: data.data._id })
         setCustomUnit({ nombre: '', abreviatura: '', tipo: '' })
         setShowCustomUnit(false)
       }
@@ -98,8 +107,8 @@ export default function Materials() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.nombre || !form.unidad) {
-      setError('Nombre y unidad son requeridos')
+    if (!form.nombre || !form.unidadBase) {
+      setError('Nombre y unidad base son requeridos')
       return
     }
 
@@ -121,7 +130,7 @@ export default function Materials() {
 
       const data: MaterialResponse = await res.json()
       if (data.success) {
-        setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidad: '', stock: 0 })
+        setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
         setEditingId(null)
         alert(editingId ? '✅ Material actualizado exitosamente' : '✅ Material creado exitosamente')
       }
@@ -132,8 +141,49 @@ export default function Materials() {
     }
   }
 
+  const handleDeleteUnit = async (unitId: string) => {
+    if (!confirm('¿Estás seguro de eliminar esta unidad? No podrás eliminarla si está siendo usada por algún material.')) return
+
+    try {
+      const res = await fetch(`${API_URL}/api/inventory/units/${unitId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        alert('✅ Unidad eliminada exitosamente')
+        loadUnits()
+      } else {
+        alert(`❌ ${data.message}`)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error eliminando unidad')
+    }
+  }
+
+  const handleAddPresentacion = () => {
+    if (!newPresentacion.nombre || newPresentacion.factorConversion <= 0) {
+      alert('Debes ingresar un nombre y un factor de conversión válido')
+      return
+    }
+
+    setForm({
+      ...form,
+      presentaciones: [...form.presentaciones, { ...newPresentacion }]
+    })
+    setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
+  }
+
+  const handleRemovePresentacion = (index: number) => {
+    setForm({
+      ...form,
+      presentaciones: form.presentaciones.filter((_, i) => i !== index)
+    })
+  }
+
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidad: '', stock: 0 })
+    setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
     setEditingId(null)
   }
 
@@ -174,26 +224,39 @@ export default function Materials() {
         </select>
 
         <div className="unit-selector">
-          <select
-            value={form.unidad}
-            onChange={(e) => {
-              if (e.target.value === 'custom') {
-                setShowCustomUnit(true)
-              } else {
-                setForm({...form, unidad: e.target.value})
-              }
-            }}
-            disabled={submitting}
-            required
-          >
-            <option value="">Seleccionar unidad *</option>
-            {units.map(unit => (
-              <option key={unit._id} value={unit._id}>
-                {unit.nombre} ({unit.abreviatura})
-              </option>
-            ))}
-            <option value="custom">➕ Agregar unidad personalizada</option>
-          </select>
+          <label>Unidad Base de Fabricación *</label>
+          <div className="unit-selector-with-delete">
+            <select
+              value={form.unidadBase}
+              onChange={(e) => {
+                if (e.target.value === 'custom') {
+                  setShowCustomUnit(true)
+                } else {
+                  setForm({...form, unidadBase: e.target.value})
+                }
+              }}
+              disabled={submitting}
+              required
+            >
+              <option value="">Seleccionar unidad base *</option>
+              {units.map(unit => (
+                <option key={unit._id} value={unit._id}>
+                  {unit.nombre} ({unit.abreviatura})
+                </option>
+              ))}
+              <option value="custom">➕ Agregar unidad personalizada</option>
+            </select>
+            {form.unidadBase && form.unidadBase !== 'custom' && (
+              <button
+                type="button"
+                onClick={() => handleDeleteUnit(form.unidadBase)}
+                className="button small secondary"
+                title="Eliminar unidad"
+              >
+                🗑️
+              </button>
+            )}
+          </div>
 
           {showCustomUnit && (
             <div className="custom-unit-form">
@@ -227,8 +290,71 @@ export default function Materials() {
           )}
         </div>
 
+        {/* Presentaciones de Compra */}
+        <div className="presentaciones-section">
+          <h3>Presentaciones de Compra</h3>
+          <p className="help-text">Agrega las presentaciones en las que compras este material (ej: Frasco 2 libras = 900 gramos)</p>
+
+          {form.presentaciones.length > 0 && (
+            <div className="presentaciones-list">
+              {form.presentaciones.map((pres, index) => (
+                <div key={index} className="presentacion-item">
+                  <div className="presentacion-info">
+                    <strong>{pres.nombre}</strong>
+                    <span>1 unidad = {pres.factorConversion} {units.find(u => u._id === form.unidadBase)?.abreviatura || 'unidades base'}</span>
+                    {pres.precioCompra ? <span>Precio: ${pres.precioCompra}</span> : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePresentacion(index)}
+                    className="button small secondary"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="add-presentacion-form">
+            <input
+              type="text"
+              placeholder="Nombre (ej: Frasco 2 libras)"
+              value={newPresentacion.nombre}
+              onChange={(e) => setNewPresentacion({...newPresentacion, nombre: e.target.value})}
+              disabled={submitting}
+            />
+            <input
+              type="number"
+              placeholder="Factor de conversión (ej: 900)"
+              value={newPresentacion.factorConversion || ''}
+              onChange={(e) => setNewPresentacion({...newPresentacion, factorConversion: Number(e.target.value)})}
+              disabled={submitting}
+              min="0"
+              step="0.01"
+            />
+            <input
+              type="number"
+              placeholder="Precio de compra (opcional)"
+              value={newPresentacion.precioCompra || ''}
+              onChange={(e) => setNewPresentacion({...newPresentacion, precioCompra: Number(e.target.value)})}
+              disabled={submitting}
+              min="0"
+              step="0.01"
+            />
+            <button
+              type="button"
+              onClick={handleAddPresentacion}
+              className="button small"
+              disabled={submitting}
+            >
+              ➕ Agregar Presentación
+            </button>
+          </div>
+        </div>
+
         <div className="form-field">
-          <label>Stock / Cantidad disponible</label>
+          <label>Stock Inicial (en unidad base)</label>
           <input
             type="number"
             placeholder="0"

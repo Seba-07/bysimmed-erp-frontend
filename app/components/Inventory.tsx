@@ -13,11 +13,12 @@ interface Material {
   nombre: string
   descripcion?: string
   categoria: 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona'
-  unidad: string | Unit
+  unidadBase: string | Unit
   stock: number
   precioUnitario: number
   tipo: 'material'
   materiales?: any[]
+  presentaciones?: Array<{ nombre: string, factorConversion: number, precioCompra?: number }>
 }
 
 interface Component {
@@ -117,6 +118,14 @@ export default function Inventory() {
       return `${unit.abreviatura}`
     }
     return ''
+  }
+
+  const getUnidadBase = (material: Material) => {
+    if (typeof material.unidadBase === 'object') {
+      return material.unidadBase.abreviatura
+    }
+    const foundUnit = units.find(u => u._id === material.unidadBase)
+    return foundUnit ? foundUnit.abreviatura : ''
   }
 
   const handleItemClick = async (item: InventoryItem) => {
@@ -298,7 +307,7 @@ export default function Inventory() {
                       </div>
                       {material.descripcion && <p className="description">{material.descripcion}</p>}
                       <div className="item-details">
-                        <span className="detail-badge">Cantidad: {material.stock} {getUnitDisplay(material.unidad)}</span>
+                        <span className="detail-badge">Cantidad: {material.stock} {getUnidadBase(material)}</span>
                       </div>
                     </div>
                   ))}
@@ -481,10 +490,10 @@ export default function Inventory() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Unidad</label>
+                  <label>Unidad Base de Fabricación</label>
                   <select
-                    value={typeof editData.unidad === 'object' ? editData.unidad._id : editData.unidad}
-                    onChange={(e) => setEditData({ ...editData, unidad: e.target.value })}
+                    value={typeof editData.unidadBase === 'object' ? editData.unidadBase._id : editData.unidadBase}
+                    onChange={(e) => setEditData({ ...editData, unidadBase: e.target.value })}
                   >
                     {units.map((unit) => (
                       <option key={unit._id} value={unit._id}>
@@ -493,6 +502,19 @@ export default function Inventory() {
                     ))}
                   </select>
                 </div>
+                {editData.presentaciones && editData.presentaciones.length > 0 && (
+                  <div className="form-group">
+                    <label>Presentaciones de Compra</label>
+                    <div className="presentaciones-readonly">
+                      {editData.presentaciones.map((pres: any, idx: number) => (
+                        <div key={idx} className="presentacion-readonly-item">
+                          <strong>{pres.nombre}</strong>: {pres.factorConversion} {getUnidadBase(selectedItem as Material)}
+                        </div>
+                      ))}
+                      <p className="help-text">Para editar presentaciones, ve a Gestión de Materiales</p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 

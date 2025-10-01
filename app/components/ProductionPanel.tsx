@@ -6,12 +6,12 @@ interface Material {
   materialId?: {
     _id: string
     nombre: string
-    unidad: string | { abreviatura: string; nombre: string }
+    unidadBase: string | { abreviatura: string; nombre: string }
   }
   material?: {
     _id: string
     nombre: string
-    unidad: string | { abreviatura: string; nombre: string }
+    unidadBase: string | { abreviatura: string; nombre: string }
   }
   cantidad: number
 }
@@ -870,20 +870,20 @@ export default function ProductionPanel() {
                           // Handle different possible structures
                           const material = mat.materialId || mat.material
                           const materialName = material?.nombre || 'Material'
-                          const unidad = material?.unidad
+                          const unidadBase = material?.unidadBase
 
                           let materialUnit = ''
-                          if (typeof unidad === 'string') {
+                          if (typeof unidadBase === 'string') {
                             // If it's a string and looks like a MongoDB ObjectId, don't show anything
                             // This means backend didn't populate the unit data
-                            if (unidad.length === 24 && /^[a-f0-9]+$/i.test(unidad)) {
+                            if (unidadBase.length === 24 && /^[a-f0-9]+$/i.test(unidadBase)) {
                               // Skip this material - no valid unit data
                               return null
                             } else {
-                              materialUnit = unidad
+                              materialUnit = unidadBase
                             }
-                          } else if (unidad && typeof unidad === 'object') {
-                            materialUnit = unidad.abreviatura || unidad.nombre || ''
+                          } else if (unidadBase && typeof unidadBase === 'object') {
+                            materialUnit = unidadBase.abreviatura || unidadBase.nombre || ''
                           }
 
                           // Only show if we have valid data
