@@ -572,41 +572,44 @@ body {
 
 .form-group-row {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   margin-bottom: 1rem;
+  align-items: flex-start;
 }
 
 .form-group-row .form-group {
   margin-bottom: 0;
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  flex: 0 0 auto;
+  gap: 1rem;
 }
 
 .form-group-row .form-group:first-child {
-  max-width: 35%;
+  flex: 0 0 auto;
 }
 
 .form-group-row .form-group:last-child {
-  max-width: 45%;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .detail-modal .form-group-row .form-group label {
   width: 28%;
   max-width: 180px;
   min-width: 140px;
+  flex-shrink: 0;
+  text-align: right;
   white-space: nowrap;
 }
 
-.detail-modal .form-group-row .form-group input {
-  width: 100px;
-  flex: 0 0 auto;
+.detail-modal .form-group-row .form-group:first-child input {
+  width: 120px;
+  flex-shrink: 0;
 }
 
-.detail-modal .form-group-row .form-group select {
-  width: 200px;
-  flex: 0 0 auto;
+.detail-modal .form-group-row .form-group:last-child select {
+  flex: 1;
+  max-width: 100%;
 }
 
 .modal-options {
