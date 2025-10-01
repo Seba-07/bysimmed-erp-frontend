@@ -534,13 +534,13 @@ export default function Inventory() {
                       if (matId && matId._id && matId.nombre) {
                         materialId = matId._id
                         materialName = matId.nombre
-                        materialUnit = matId.unidad?.abreviatura || ''
+                        materialUnit = matId.unidadBase?.abreviatura || ''
                       } else if (matId && typeof matId === 'string') {
                         materialId = matId
                         const foundMat = allMaterials.find((m: any) => m._id === materialId)
                         if (foundMat) {
                           materialName = foundMat.nombre
-                          const unit = foundMat.unidad
+                          const unit = foundMat.unidadBase
                           materialUnit = typeof unit === 'object' ? unit.abreviatura : ''
                         }
                       } else {
@@ -549,7 +549,7 @@ export default function Inventory() {
                           const foundMat = allMaterials.find((m: any) => m._id === matIdFromStruct)
                           if (foundMat) {
                             materialName = foundMat.nombre
-                            const unit = foundMat.unidad
+                            const unit = foundMat.unidadBase
                             materialUnit = typeof unit === 'object' ? unit.abreviatura : ''
                           }
                         }
