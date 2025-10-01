@@ -371,7 +371,13 @@ export default function Inventory() {
                 className="modal-option"
                 onClick={() => {
                   setShowNewItemModal(false)
-                  window.location.hash = 'materials'
+                  // Force navigation even if already on the same hash
+                  if (window.location.hash === '#materials') {
+                    window.location.hash = ''
+                    setTimeout(() => { window.location.hash = 'materials' }, 0)
+                  } else {
+                    window.location.hash = 'materials'
+                  }
                 }}
               >
                 <span className="option-icon">📦</span>
@@ -382,7 +388,13 @@ export default function Inventory() {
                 className="modal-option"
                 onClick={() => {
                   setShowNewItemModal(false)
-                  window.location.hash = 'components'
+                  // Force navigation even if already on the same hash
+                  if (window.location.hash === '#components') {
+                    window.location.hash = ''
+                    setTimeout(() => { window.location.hash = 'components' }, 0)
+                  } else {
+                    window.location.hash = 'components'
+                  }
                 }}
               >
                 <span className="option-icon">🔧</span>
@@ -393,7 +405,13 @@ export default function Inventory() {
                 className="modal-option"
                 onClick={() => {
                   setShowNewItemModal(false)
-                  window.location.hash = 'models'
+                  // Force navigation even if already on the same hash
+                  if (window.location.hash === '#models') {
+                    window.location.hash = ''
+                    setTimeout(() => { window.location.hash = 'models' }, 0)
+                  } else {
+                    window.location.hash = 'models'
+                  }
                 }}
               >
                 <span className="option-icon">🏭</span>
