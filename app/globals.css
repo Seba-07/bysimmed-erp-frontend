@@ -600,6 +600,10 @@ body {
   grid-column: 1 / -1;
 }
 
+.detail-modal .form-group-row .form-group:first-child label {
+  margin-left: -0.5rem;
+}
+
 .detail-modal .form-group-row .form-group:first-child input {
   width: 120px;
   flex-shrink: 0;
