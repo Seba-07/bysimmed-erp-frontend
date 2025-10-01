@@ -36,8 +36,7 @@ export default function Home() {
   return (
     <main className="container">
       <h1 className="logo">bySIMMED — ERP</h1>
-      <p className="subtitle">Sistema de Gestión de Inventario</p>
-      <p className="dev-badge">🚧 Entorno de Desarrollo</p>
+      <p className="subtitle">Sistema de Gestión de Inventario y Producción</p>
 
       {/* Navegación por tabs */}
       <div className="tabs">
