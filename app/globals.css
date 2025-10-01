@@ -572,7 +572,7 @@ body {
 
 .form-group-row {
   display: grid;
-  grid-template-columns: minmax(140px, 28%) 1fr;
+  grid-template-columns: minmax(140px, 28%) 120px auto 1fr;
   gap: 1rem;
   margin-bottom: 1rem;
   align-items: flex-start;
@@ -596,18 +596,15 @@ body {
 
 .detail-modal .form-group-row .form-group:first-child input {
   grid-column: 2;
-  width: 120px;
-  justify-self: start;
 }
 
 .detail-modal .form-group-row .form-group:last-child label {
-  grid-column: 1;
-  grid-row: 2;
+  grid-column: 3;
+  padding-left: 0.5rem;
 }
 
 .detail-modal .form-group-row .form-group:last-child select {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 4;
 }
 
 .modal-options {
