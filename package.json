@@ -1,6 +1,6 @@
 {
   "name": "bysimmed-erp-frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Frontend ERP PWA para bySIMMED",
   "private": true,
   "scripts": {
