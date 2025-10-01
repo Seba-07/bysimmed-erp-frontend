@@ -177,14 +177,24 @@ body {
 
 .form-field {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 }
 
 .form-field label {
   color: #cbd5e1;
   font-size: 0.9rem;
   font-weight: 500;
+  min-width: 180px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  flex: 1;
 }
 
 .inventory-form input,
@@ -367,8 +377,25 @@ body {
 
 .unit-selector {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.unit-selector > label {
+  min-width: 180px;
+  flex-shrink: 0;
+  text-align: right;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.unit-selector-with-delete {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .custom-unit-form {
@@ -902,8 +929,21 @@ body {
 
 .order-form .form-field {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.order-form .form-field label {
+  min-width: 140px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.order-form .form-field input,
+.order-form .form-field select,
+.order-form .form-field textarea {
+  flex: 1;
 }
 
 .order-form input,
@@ -1152,15 +1192,19 @@ body {
 
 .detail-modal .form-group {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
 .detail-modal .form-group label {
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  min-width: 140px;
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .detail-modal .form-group input,
@@ -1173,6 +1217,11 @@ body {
   padding: 0.75rem;
   font-size: 1rem;
   font-family: inherit;
+  flex: 1;
+}
+
+.detail-modal .form-group textarea {
+  min-height: 80px;
 }
 
 .detail-modal .form-group input:focus,
@@ -1375,11 +1424,26 @@ body {
 }
 
 /* Improved Form Fields */
+.production-form .form-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
 .production-form .form-field label {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  min-width: 140px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.production-form .form-field input,
+.production-form .form-field select,
+.production-form .form-field textarea {
+  flex: 1;
 }
 
 .production-form input,
