@@ -5,49 +5,43 @@ import { useEffect } from 'react'
 export default function ServiceWorkerUpdater() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      // Unregister all existing service workers first
+      console.log('🧹 Starting cache cleanup...')
+
+      // Unregister ALL existing service workers
       navigator.serviceWorker.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => {
-          console.log('Unregistering old service worker...')
-          registration.unregister()
+        console.log(`Found ${registrations.length} service worker(s)`)
+
+        const unregisterPromises = registrations.map((registration) => {
+          console.log('🗑️ Unregistering:', registration.scope)
+          return registration.unregister()
         })
+
+        return Promise.all(unregisterPromises)
+      }).then(() => {
+        console.log('✅ All service workers unregistered')
+
+        // Clear all caches
+        if ('caches' in window) {
+          return caches.keys().then((cacheNames) => {
+            console.log(`Found ${cacheNames.length} cache(s)`)
+
+            const deletePromises = cacheNames.map((cacheName) => {
+              console.log('🗑️ Deleting cache:', cacheName)
+              return caches.delete(cacheName)
+            })
+
+            return Promise.all(deletePromises)
+          })
+        }
+      }).then(() => {
+        console.log('✅ All caches cleared')
+        console.log('🔄 Reloading for fresh content...')
+
+        // Force a hard reload to get fresh content
+        window.location.reload()
+      }).catch((error) => {
+        console.error('❌ Error during cleanup:', error)
       })
-
-      // Clear all caches
-      if ('caches' in window) {
-        caches.keys().then((cacheNames) => {
-          cacheNames.forEach((cacheName) => {
-            console.log('Deleting cache:', cacheName)
-            caches.delete(cacheName)
-          })
-        })
-      }
-
-      // Register new service worker
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered:', registration)
-
-          // Check for updates
-          registration.update()
-
-          // Listen for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
-                  console.log('New service worker activated, reloading...')
-                  window.location.reload()
-                }
-              })
-            }
-          })
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error)
-        })
     }
   }, [])
 
