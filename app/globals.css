@@ -574,7 +574,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 2rem;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
@@ -590,9 +590,7 @@ body {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
-  width: 28%;
-  max-width: 180px;
-  min-width: 140px;
+  width: 180px;
   flex-shrink: 0;
   text-align: right;
   padding-top: 0.75rem;
