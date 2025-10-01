@@ -572,39 +572,48 @@ body {
 
 .detail-modal .form-group-row {
   display: grid;
-  grid-template-columns: minmax(140px, 180px) 120px auto 1fr;
+  grid-template-columns: 28% 1fr;
   gap: 1rem;
   margin-bottom: 1rem;
   align-items: flex-start;
 }
 
-.form-group-row .form-group {
-  display: contents;
+.detail-modal .form-group-row > * {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .detail-modal .form-group-row .form-group label {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
+  width: 100%;
+  max-width: 180px;
+  min-width: 140px;
+  flex-shrink: 0;
   text-align: right;
   padding-top: 0.75rem;
 }
 
-.detail-modal .form-group-row .form-group:first-child label {
-  grid-column: 1;
+.detail-modal .form-group-row .form-group:first-child {
+  grid-column: 1 / -1;
 }
 
 .detail-modal .form-group-row .form-group:first-child input {
-  grid-column: 2;
+  width: 120px;
+  flex-shrink: 0;
 }
 
-.detail-modal .form-group-row .form-group:last-child label {
-  grid-column: 3;
-  padding-left: 0.5rem;
+.detail-modal .form-group-row .form-group:last-child {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: -3rem;
+  padding-left: calc(28% + 1rem + 120px + 1rem);
 }
 
 .detail-modal .form-group-row .form-group:last-child select {
-  grid-column: 4;
+  flex: 1;
 }
 
 .modal-options {
