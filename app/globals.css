@@ -571,24 +571,26 @@ body {
 }
 
 .detail-modal .form-group-row {
-  display: grid;
-  grid-template-columns: 28% 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
   align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 1rem;
 }
 
-.detail-modal .form-group-row > * {
+.detail-modal .form-group-row .form-group {
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   gap: 1rem;
+  flex: 0 0 auto;
 }
 
 .detail-modal .form-group-row .form-group label {
   color: #94a3b8;
   font-size: 0.9rem;
   font-weight: 500;
-  width: 100%;
+  width: 28%;
   max-width: 180px;
   min-width: 140px;
   flex-shrink: 0;
@@ -597,11 +599,7 @@ body {
 }
 
 .detail-modal .form-group-row .form-group:first-child {
-  grid-column: 1 / -1;
-}
-
-.detail-modal .form-group-row .form-group:first-child label {
-  margin-left: -0.5rem;
+  flex: 0 0 auto;
 }
 
 .detail-modal .form-group-row .form-group:first-child input {
@@ -610,14 +608,12 @@ body {
 }
 
 .detail-modal .form-group-row .form-group:last-child {
-  grid-column: 1 / -1;
-  justify-content: flex-end;
-  margin-top: -3rem;
-  padding-left: calc(28% + 1rem + 120px + 1rem);
+  flex: 1 1 auto;
 }
 
 .detail-modal .form-group-row .form-group:last-child select {
   flex: 1;
+  min-width: 200px;
 }
 
 .modal-options {
