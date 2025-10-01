@@ -178,7 +178,7 @@ body {
 .form-field {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -189,6 +189,7 @@ body {
   min-width: 180px;
   flex-shrink: 0;
   text-align: right;
+  padding-top: 0.75rem;
 }
 
 .form-field input,
@@ -378,7 +379,7 @@ body {
 .unit-selector {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -389,6 +390,7 @@ body {
   color: #cbd5e1;
   font-size: 0.9rem;
   font-weight: 500;
+  padding-top: 0.75rem;
 }
 
 .unit-selector-with-delete {
@@ -534,6 +536,30 @@ body {
   margin: 0 0 1rem 0;
   text-align: center;
   font-size: 1.25rem;
+}
+
+.modal-content .form-group {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content .form-group label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 160px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-top: 0.75rem;
+}
+
+.modal-content .form-group input,
+.modal-content .form-group select,
+.modal-content .form-group textarea {
+  flex: 1;
 }
 
 .modal-options {
@@ -930,7 +956,7 @@ body {
 .order-form .form-field {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -938,6 +964,7 @@ body {
   min-width: 140px;
   flex-shrink: 0;
   text-align: right;
+  padding-top: 0.75rem;
 }
 
 .order-form .form-field input,
@@ -1193,7 +1220,7 @@ body {
 .detail-modal .form-group {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -1205,6 +1232,7 @@ body {
   min-width: 140px;
   flex-shrink: 0;
   text-align: right;
+  padding-top: 0.75rem;
 }
 
 .detail-modal .form-group input,
@@ -1427,7 +1455,7 @@ body {
 .production-form .form-field {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -1438,6 +1466,7 @@ body {
   min-width: 140px;
   flex-shrink: 0;
   text-align: right;
+  padding-top: 0.75rem;
 }
 
 .production-form .form-field input,
