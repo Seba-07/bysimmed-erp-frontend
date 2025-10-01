@@ -539,15 +539,6 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
               />
             </div>
 
-            <div className="form-group">
-              <label>Cantidad disponible</label>
-              <input
-                type="number"
-                value={editData.stock || 0}
-                onChange={(e) => setEditData({ ...editData, stock: parseFloat(e.target.value) })}
-              />
-            </div>
-
             {selectedItem.tipo === 'material' && (
               <>
                 <div className="form-group">
@@ -565,18 +556,29 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                     <option value="Limpieza">Limpieza</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Unidad Base de Fabricación</label>
-                  <select
-                    value={typeof editData.unidadBase === 'object' ? editData.unidadBase._id : editData.unidadBase}
-                    onChange={(e) => setEditData({ ...editData, unidadBase: e.target.value })}
-                  >
-                    {units.map((unit) => (
-                      <option key={unit._id} value={unit._id}>
-                        {unit.nombre} ({unit.abreviatura})
-                      </option>
-                    ))}
-                  </select>
+
+                <div className="form-group-row">
+                  <div className="form-group">
+                    <label>Cantidad disponible</label>
+                    <input
+                      type="number"
+                      value={editData.stock || 0}
+                      onChange={(e) => setEditData({ ...editData, stock: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Unidad Base de Fabricación</label>
+                    <select
+                      value={typeof editData.unidadBase === 'object' ? editData.unidadBase._id : editData.unidadBase}
+                      onChange={(e) => setEditData({ ...editData, unidadBase: e.target.value })}
+                    >
+                      {units.map((unit) => (
+                        <option key={unit._id} value={unit._id}>
+                          {unit.nombre} ({unit.abreviatura})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Presentaciones de Compra</label>
