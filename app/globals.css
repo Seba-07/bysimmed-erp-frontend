@@ -601,6 +601,7 @@ body {
 
 .detail-modal .form-group-row .form-group:last-child label {
   grid-column: 3;
+  justify-self: end;
 }
 
 .detail-modal .form-group-row .form-group:last-child select {
