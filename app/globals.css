@@ -2276,3 +2276,132 @@ body {
     font-size: 0.75rem;
   }
 }
+
+/* Material category filter and display */
+.filter-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #1e293b;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-section label {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.categoria-filter {
+  padding: 0.5rem 1rem;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.materials-list {
+  margin-top: 2rem;
+}
+
+.materials-list h3 {
+  color: #e2e8f0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.material-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.material-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.material-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.material-header h4 {
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  margin: 0;
+  flex: 1;
+}
+
+.categoria-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.material-description {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.material-details {
+  margin-bottom: 1rem;
+}
+
+.material-details p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin: 0.25rem 0;
+}
+
+.material-details strong {
+  color: #e2e8f0;
+}
+
+.material-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.material-actions .button {
+  flex: 1;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .materials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .categoria-filter {
+    width: 100%;
+  }
+}

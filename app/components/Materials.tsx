@@ -14,6 +14,7 @@ interface Material {
   nombre: string
   descripcion?: string
   imagen?: string
+  categoria: 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona'
   unidad: string | Unit
   stock: number
   precioUnitario: number
@@ -38,9 +39,11 @@ export default function Materials() {
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [categoriaFilter, setCategoriaFilter] = useState<string>('Todas')
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
+    categoria: 'Silicona' as 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona',
     unidad: '',
     stock: 0
   })
@@ -141,7 +144,7 @@ export default function Materials() {
 
       const data: MaterialResponse = await res.json()
       if (data.success) {
-        setForm({ nombre: '', descripcion: '', unidad: '', stock: 0 })
+        setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidad: '', stock: 0 })
         setEditingId(null)
         loadMaterials()
         alert(editingId ? '✅ Material actualizado exitosamente' : '✅ Material creado exitosamente')
@@ -157,6 +160,7 @@ export default function Materials() {
     setForm({
       nombre: material.nombre,
       descripcion: material.descripcion || '',
+      categoria: material.categoria || 'Silicona',
       unidad: typeof material.unidad === 'string' ? material.unidad : material.unidad._id,
       stock: material.stock
     })
@@ -179,7 +183,7 @@ export default function Materials() {
   }
 
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', unidad: '', stock: 0 })
+    setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidad: '', stock: 0 })
     setEditingId(null)
   }
 
@@ -191,9 +195,28 @@ export default function Materials() {
     return foundUnit ? `${foundUnit.nombre} (${foundUnit.abreviatura})` : 'Unidad desconocida'
   }
 
+  const filteredMaterials = categoriaFilter === 'Todas'
+    ? materials
+    : materials.filter(m => m.categoria === categoriaFilter)
+
+  const categorias = ['Todas', 'Silicona', 'Resina', 'Filamentos', 'Pegamentos', 'Aditivos', 'Accesorios', 'Limpieza']
+
   return (
     <div className="section">
       <h2>📦 Gestión de Materiales</h2>
+
+      <div className="filter-section">
+        <label>Filtrar por categoría:</label>
+        <select
+          value={categoriaFilter}
+          onChange={(e) => setCategoriaFilter(e.target.value)}
+          className="categoria-filter"
+        >
+          {categorias.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
 
       <form onSubmit={handleSubmit} className="inventory-form">
         <input
@@ -211,6 +234,21 @@ export default function Materials() {
           onChange={(e) => setForm({...form, descripcion: e.target.value})}
           disabled={submitting}
         />
+
+        <select
+          value={form.categoria}
+          onChange={(e) => setForm({...form, categoria: e.target.value as any})}
+          disabled={submitting}
+          required
+        >
+          <option value="Silicona">Silicona</option>
+          <option value="Resina">Resina</option>
+          <option value="Filamentos">Filamentos</option>
+          <option value="Pegamentos">Pegamentos</option>
+          <option value="Aditivos">Aditivos</option>
+          <option value="Accesorios">Accesorios</option>
+          <option value="Limpieza">Limpieza</option>
+        </select>
 
         <div className="unit-selector">
           <select
@@ -293,6 +331,43 @@ export default function Materials() {
       {error && (
         <div className="response error">
           <pre>Error: {error}</pre>
+        </div>
+      )}
+
+      {loading ? (
+        <p>Cargando materiales...</p>
+      ) : (
+        <div className="materials-list">
+          <h3>Materiales Registrados ({filteredMaterials.length})</h3>
+          {filteredMaterials.length === 0 ? (
+            <p>No hay materiales registrados{categoriaFilter !== 'Todas' ? ` en la categoría ${categoriaFilter}` : ''}.</p>
+          ) : (
+            <div className="materials-grid">
+              {filteredMaterials.map((material) => (
+                <div key={material._id} className="material-card">
+                  <div className="material-header">
+                    <h4>{material.nombre}</h4>
+                    <span className="categoria-badge">{material.categoria}</span>
+                  </div>
+                  {material.descripcion && (
+                    <p className="material-description">{material.descripcion}</p>
+                  )}
+                  <div className="material-details">
+                    <p><strong>Unidad:</strong> {getUnitDisplay(material.unidad)}</p>
+                    <p><strong>Stock:</strong> {material.stock}</p>
+                  </div>
+                  <div className="material-actions">
+                    <button onClick={() => handleEdit(material)} className="button small">
+                      ✏️ Editar
+                    </button>
+                    <button onClick={() => handleDelete(material._id)} className="button small secondary">
+                      🗑️ Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
