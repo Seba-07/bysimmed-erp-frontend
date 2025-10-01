@@ -45,7 +45,11 @@ interface Model {
 
 type InventoryItem = Material | Component | Model
 
-export default function Inventory() {
+interface InventoryProps {
+  onNavigateToRestock?: () => void
+}
+
+export default function Inventory({ onNavigateToRestock }: InventoryProps) {
   const [materials, setMaterials] = useState<Material[]>([])
   const [components, setComponents] = useState<Component[]>([])
   const [models, setModels] = useState<Model[]>([])
@@ -348,24 +352,39 @@ export default function Inventory() {
                   {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).map((material) => (
                     <div
                       key={material._id}
-                      className={`inventory-item clickable ${material.hasPendingRestock ? 'pending-restock' : ''}`}
-                      onClick={() => handleItemClick(material)}
+                      className={`inventory-item ${material.hasPendingRestock ? 'pending-restock' : ''}`}
                     >
-                      <div className="material-header">
-                        <h4>{material.nombre}</h4>
-                        <div className="header-badges">
-                          <span className="categoria-badge">{material.categoria}</span>
-                          {material.hasPendingRestock && (
-                            <span className="restock-badge" title={`${material.pendingRestockCount} solicitud(es) pendiente(s)`}>
-                              📦 Reposición Solicitada
-                            </span>
-                          )}
+                      <div
+                        className="clickable-area"
+                        onClick={() => handleItemClick(material)}
+                      >
+                        <div className="material-header">
+                          <h4>{material.nombre}</h4>
+                          <div className="header-badges">
+                            <span className="categoria-badge">{material.categoria}</span>
+                            {material.hasPendingRestock && (
+                              <span className="restock-badge" title={`${material.pendingRestockCount} solicitud(es) pendiente(s)`}>
+                                📦 Reposición Solicitada
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {material.descripcion && <p className="description">{material.descripcion}</p>}
+                        <div className="item-details">
+                          <span className="detail-badge">Cantidad: {material.stock} {getUnidadBase(material)}</span>
                         </div>
                       </div>
-                      {material.descripcion && <p className="description">{material.descripcion}</p>}
-                      <div className="item-details">
-                        <span className="detail-badge">Cantidad: {material.stock} {getUnidadBase(material)}</span>
-                      </div>
+                      {material.hasPendingRestock && onNavigateToRestock && (
+                        <button
+                          className="view-restock-btn"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onNavigateToRestock()
+                          }}
+                        >
+                          Ver Solicitudes →
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

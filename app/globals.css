@@ -2514,6 +2514,167 @@ body {
   white-space: nowrap;
 }
 
+.clickable-area {
+  cursor: pointer;
+}
+
+.view-restock-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: #f59e0b;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-restock-btn:hover {
+  background: #fb923c;
+  transform: translateY(-1px);
+}
+
+/* Restock Management styles */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #334155;
+}
+
+.filter-tab {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.filter-tab:hover {
+  color: #f1f5f9;
+  background: #1e293b;
+}
+
+.filter-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.restock-requests-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.restock-request-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restock-request-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.request-header h4 {
+  margin: 0;
+  color: #f1f5f9;
+}
+
+.estado-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.estado-badge-large {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.request-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.request-details p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.request-notes {
+  color: #94a3b8 !important;
+  font-style: italic;
+  padding-left: 1rem;
+  border-left: 3px solid #334155;
+}
+
+.request-detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.request-detail-section h4 {
+  color: #3b82f6;
+  margin-bottom: 0.75rem;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #334155;
+}
+
+.timeline-dot.active {
+  background: #10b981;
+}
+
+.timeline-dot.cancelled {
+  background: #ef4444;
+}
+
+.state-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
   .add-presentacion-form {
     grid-template-columns: 1fr;
@@ -2530,6 +2691,18 @@ body {
   }
 
   .header-buttons .button {
+    width: 100%;
+  }
+
+  .filter-tabs {
+    overflow-x: auto;
+  }
+
+  .state-buttons {
+    flex-direction: column;
+  }
+
+  .state-buttons .button {
     width: 100%;
   }
 }
