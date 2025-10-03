@@ -193,7 +193,7 @@ export default function Materials({ onCreated }: MaterialsProps) {
   }
 
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
+    setForm({ nombre: '', descripcion: '', imagen: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
     setEditingId(null)
   }
 
