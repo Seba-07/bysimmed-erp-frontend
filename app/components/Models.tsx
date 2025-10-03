@@ -169,6 +169,7 @@ export default function Models({ onCreated }: ModelsProps) {
     setForm({
       nombre: model.nombre,
       descripcion: model.descripcion || '',
+      imagen: model.imagen || '',
       stock: model.stock,
       precioUnitario: model.precioUnitario
     })

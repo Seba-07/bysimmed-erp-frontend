@@ -170,6 +170,7 @@ export default function Components({ onCreated }: ComponentsProps) {
     setForm({
       nombre: component.nombre,
       descripcion: component.descripcion || '',
+      imagen: component.imagen || '',
       stock: component.stock,
       precioUnitario: component.precioUnitario
     })
