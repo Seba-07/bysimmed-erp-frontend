@@ -197,7 +197,7 @@ export default function Components({ onCreated }: ComponentsProps) {
   }
 
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', stock: 0, precioUnitario: 0 })
+    setForm({ nombre: '', descripcion: '', imagen: '', stock: 0, precioUnitario: 0 })
     setMaterialsList([])
     setEditingId(null)
   }
