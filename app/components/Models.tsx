@@ -196,7 +196,7 @@ export default function Models({ onCreated }: ModelsProps) {
   }
 
   const cancelEdit = () => {
-    setForm({ nombre: '', descripcion: '', stock: 0, precioUnitario: 0 })
+    setForm({ nombre: '', descripcion: '', imagen: '', stock: 0, precioUnitario: 0 })
     setComponentsList([])
     setEditingId(null)
   }
