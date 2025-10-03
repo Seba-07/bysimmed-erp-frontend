@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import CloudinaryUpload from './CloudinaryUpload'
 
 interface Unit {
   _id: string
@@ -51,6 +52,7 @@ export default function Materials({ onCreated }: MaterialsProps) {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
+    imagen: '',
     categoria: 'Silicona' as 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona',
     unidadBase: '',
     stock: 0,
@@ -134,7 +136,7 @@ export default function Materials({ onCreated }: MaterialsProps) {
 
       const data: MaterialResponse = await res.json()
       if (data.success) {
-        setForm({ nombre: '', descripcion: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
+        setForm({ nombre: '', descripcion: '', imagen: '', categoria: 'Silicona', unidadBase: '', stock: 0, presentaciones: [] })
         setEditingId(null)
         const isCreating = !editingId
         alert(editingId ? '✅ Material actualizado exitosamente' : '✅ Material creado exitosamente')
@@ -215,6 +217,14 @@ export default function Materials({ onCreated }: MaterialsProps) {
           onChange={(e) => setForm({...form, descripcion: e.target.value})}
           disabled={submitting}
         />
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Imagen (opcional)</label>
+          <CloudinaryUpload
+            currentImage={form.imagen}
+            onUploadSuccess={(url) => setForm({...form, imagen: url})}
+          />
+        </div>
 
         <select
           value={form.categoria}

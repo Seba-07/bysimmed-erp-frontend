@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import CloudinaryUpload from './CloudinaryUpload'
 
 interface Component {
   _id: string
@@ -48,6 +49,7 @@ export default function Models({ onCreated }: ModelsProps) {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
+    imagen: '',
     stock: 0,
     precioUnitario: 0
   })
@@ -146,7 +148,7 @@ export default function Models({ onCreated }: ModelsProps) {
 
       const data: ModelResponse = await res.json()
       if (data.success) {
-        setForm({ nombre: '', descripcion: '', stock: 0, precioUnitario: 0 })
+        setForm({ nombre: '', descripcion: '', imagen: '', stock: 0, precioUnitario: 0 })
         setComponentsList([])
         const isCreating = !editingId
         setEditingId(null)
@@ -224,6 +226,13 @@ export default function Models({ onCreated }: ModelsProps) {
           onChange={(e) => setForm({...form, descripcion: e.target.value})}
           disabled={submitting}
         />
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Imagen (opcional)</label>
+          <CloudinaryUpload
+            currentImage={form.imagen}
+            onUploadSuccess={(url) => setForm({...form, imagen: url})}
+          />
+        </div>
         <div className="form-field">
           <label>Stock / Cantidad disponible</label>
           <input
