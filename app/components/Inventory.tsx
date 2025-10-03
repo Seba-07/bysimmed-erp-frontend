@@ -12,6 +12,7 @@ interface Material {
   _id: string
   nombre: string
   descripcion?: string
+  imagen?: string
   categoria: 'Accesorios' | 'Aditivos' | 'Filamentos' | 'Limpieza' | 'Pegamentos' | 'Resina' | 'Silicona'
   unidadBase: string | Unit
   stock: number
@@ -27,6 +28,7 @@ interface Component {
   _id: string
   nombre: string
   descripcion?: string
+  imagen?: string
   stock: number
   precioUnitario: number
   tipo: 'component'
@@ -37,6 +39,7 @@ interface Model {
   _id: string
   nombre: string
   descripcion?: string
+  imagen?: string
   stock: number
   precioUnitario: number
   tipo: 'model'
@@ -358,6 +361,18 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                         className="clickable-area"
                         onClick={() => handleItemClick(material)}
                       >
+                        {material.imagen && (
+                          <div className="item-image-container">
+                            <img
+                              src={material.imagen}
+                              alt={material.nombre}
+                              className="item-image"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        )}
                         <div className="material-header">
                           <h4>{material.nombre}</h4>
                           <div className="header-badges">
@@ -405,6 +420,18 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                       className="inventory-item clickable"
                       onClick={() => handleItemClick(component)}
                     >
+                      {component.imagen && (
+                        <div className="item-image-container">
+                          <img
+                            src={component.imagen}
+                            alt={component.nombre}
+                            className="item-image"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none'
+                            }}
+                          />
+                        </div>
+                      )}
                       <h4>{component.nombre}</h4>
                       {component.descripcion && <p className="description">{component.descripcion}</p>}
                       <div className="item-details">
@@ -430,6 +457,18 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                       className="inventory-item clickable"
                       onClick={() => handleItemClick(model)}
                     >
+                      {model.imagen && (
+                        <div className="item-image-container">
+                          <img
+                            src={model.imagen}
+                            alt={model.nombre}
+                            className="item-image"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none'
+                            }}
+                          />
+                        </div>
+                      )}
                       <h4>{model.nombre}</h4>
                       {model.descripcion && <p className="description">{model.descripcion}</p>}
                       <div className="item-details">
@@ -538,6 +577,32 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 rows={3}
               />
             </div>
+
+            <div className="form-group">
+              <label>URL de Imagen</label>
+              <input
+                type="text"
+                placeholder="https://ejemplo.com/imagen.jpg"
+                value={editData.imagen || ''}
+                onChange={(e) => setEditData({ ...editData, imagen: e.target.value })}
+              />
+            </div>
+
+            {editData.imagen && (
+              <div className="form-group">
+                <label>Vista previa</label>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem', background: '#0f172a', borderRadius: '8px' }}>
+                  <img
+                    src={editData.imagen}
+                    alt="Preview"
+                    style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {selectedItem.tipo === 'material' && (
               <>
