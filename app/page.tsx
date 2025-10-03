@@ -1,81 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Inventory from './components/Inventory'
-import Materials from './components/Materials'
-import Components from './components/Components'
-import Models from './components/Models'
-import Production from './components/Production'
-import ProductionPanel from './components/ProductionPanel'
-import RestockManagement from './components/RestockManagement'
-
-type Tab = 'inventory' | 'production' | 'production-panel' | 'restock-management' | 'materials' | 'components' | 'models'
+import Link from 'next/link'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>('inventory')
-
-  useEffect(() => {
-    // Detectar hash en la URL y cambiar de tab
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '') as Tab
-      if (['inventory', 'production', 'production-panel', 'restock-management', 'materials', 'components', 'models'].includes(hash)) {
-        setActiveTab(hash)
-      }
-    }
-
-    // Ejecutar al cargar
-    handleHashChange()
-
-    // Escuchar cambios en el hash
-    window.addEventListener('hashchange', handleHashChange)
-
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange)
-    }
-  }, [])
-
   return (
     <main className="container">
       <h1 className="logo">bySIMMED — ERP</h1>
       <p className="subtitle">Sistema de Gestión de Inventario y Producción</p>
 
-      {/* Navegación por tabs */}
-      <div className="tabs">
-        <button
-          className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}
-          onClick={() => setActiveTab('inventory')}
-        >
-          📊 Inventario
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'restock-management' ? 'active' : ''}`}
-          onClick={() => setActiveTab('restock-management')}
-        >
-          📦 Reposiciones
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'production' ? 'active' : ''}`}
-          onClick={() => setActiveTab('production')}
-        >
-          🏭 Órdenes de Fabricación
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'production-panel' ? 'active' : ''}`}
-          onClick={() => setActiveTab('production-panel')}
-        >
-          📋 Panel de Producción
-        </button>
-      </div>
+      <div className="main-menu">
+        <Link href="/inventario" className="menu-card">
+          <span className="menu-icon">📊</span>
+          <h2>Inventario</h2>
+          <p>Gestión de materiales, componentes y modelos</p>
+        </Link>
 
-      {/* Contenido según tab activo */}
-      <div className="tab-content">
-        {activeTab === 'inventory' && <Inventory onNavigateToRestock={() => setActiveTab('restock-management')} />}
-        {activeTab === 'restock-management' && <RestockManagement />}
-        {activeTab === 'production' && <Production />}
-        {activeTab === 'production-panel' && <ProductionPanel />}
-        {activeTab === 'materials' && <Materials onCreated={() => setActiveTab('inventory')} />}
-        {activeTab === 'components' && <Components onCreated={() => setActiveTab('inventory')} />}
-        {activeTab === 'models' && <Models onCreated={() => setActiveTab('inventory')} />}
+        <Link href="/reposiciones" className="menu-card">
+          <span className="menu-icon">📦</span>
+          <h2>Reposiciones</h2>
+          <p>Solicitudes de reabastecimiento de inventario</p>
+        </Link>
+
+        <Link href="/ordenes" className="menu-card">
+          <span className="menu-icon">🏭</span>
+          <h2>Órdenes de Fabricación</h2>
+          <p>Gestión de órdenes de producción</p>
+        </Link>
+
+        <Link href="/produccion" className="menu-card">
+          <span className="menu-icon">📋</span>
+          <h2>Panel de Producción</h2>
+          <p>Monitoreo y control de producción</p>
+        </Link>
       </div>
     </main>
   )
