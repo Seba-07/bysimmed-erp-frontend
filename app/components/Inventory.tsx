@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import CloudinaryUpload from './CloudinaryUpload'
 
 interface Unit {
   _id: string
@@ -579,30 +580,12 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             </div>
 
             <div className="form-group">
-              <label>URL de Imagen</label>
-              <input
-                type="text"
-                placeholder="https://ejemplo.com/imagen.jpg"
-                value={editData.imagen || ''}
-                onChange={(e) => setEditData({ ...editData, imagen: e.target.value })}
+              <label>Imagen</label>
+              <CloudinaryUpload
+                currentImage={editData.imagen}
+                onUploadSuccess={(url) => setEditData({ ...editData, imagen: url })}
               />
             </div>
-
-            {editData.imagen && (
-              <div className="form-group">
-                <label>Vista previa</label>
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem', background: '#0f172a', borderRadius: '8px' }}>
-                  <img
-                    src={editData.imagen}
-                    alt="Preview"
-                    style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
-                  />
-                </div>
-              </div>
-            )}
 
             {selectedItem.tipo === 'material' && (
               <>
