@@ -1371,19 +1371,23 @@ tbody tr:last-child td {
 .modal-content-minimal h3 {
   color: var(--color-primary);
   margin: 0 0 1.5rem 0;
+  padding: 0 2rem;
   font-size: 1.25rem;
   font-weight: 600;
 }
 
-.modal-content .form-group {
+.modal-content .form-group,
+.modal-content .form-field {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding: 0 2rem;
 }
 
-.modal-content .form-group label {
+.modal-content .form-group label,
+.modal-content .form-field label {
   color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
@@ -1397,7 +1401,10 @@ tbody tr:last-child td {
 
 .modal-content .form-group input,
 .modal-content .form-group select,
-.modal-content .form-group textarea {
+.modal-content .form-group textarea,
+.modal-content .form-field input,
+.modal-content .form-field select,
+.modal-content .form-field textarea {
   flex: 1;
 }
 
