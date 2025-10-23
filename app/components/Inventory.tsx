@@ -280,21 +280,21 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
 
   return (
-    <div className="section">
-      <div className="inventory-header">
-        <h2>📊 Inventario General</h2>
-        <div className="header-buttons">
+    <div className="page-container">
+      <div className="page-header-minimal">
+        <h1>Inventario General</h1>
+        <div className="header-actions-minimal">
           <button
-            className="button secondary"
+            className="btn-minimal btn-secondary-minimal"
             onClick={() => setShowRestockModal(true)}
           >
-            📦 Reponer Inventario
+            + Reponer Inventario
           </button>
           <button
-            className="button"
+            className="btn-minimal btn-primary-minimal"
             onClick={() => setShowNewItemModal(true)}
           >
-            ➕ Nuevo Producto
+            + Nuevo Producto
           </button>
         </div>
       </div>
@@ -311,19 +311,19 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
           className={`tab ${activeTab === 'materials' ? 'active' : ''}`}
           onClick={() => setActiveTab('materials')}
         >
-          📦 Materiales ({materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).length})
+          Materiales ({materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).length})
         </button>
         <button
           className={`tab ${activeTab === 'components' ? 'active' : ''}`}
           onClick={() => setActiveTab('components')}
         >
-          🔧 Componentes ({components.length})
+          Componentes ({components.length})
         </button>
         <button
           className={`tab ${activeTab === 'models' ? 'active' : ''}`}
           onClick={() => setActiveTab('models')}
         >
-          🏭 Modelos ({models.length})
+          Modelos ({models.length})
         </button>
       </div>
 
@@ -334,12 +334,13 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
           {/* MATERIALES */}
           {activeTab === 'materials' && (
             <div>
-              <div className="filter-section">
-                <label>Filtrar por categoría:</label>
+              <div className="filter-section" style={{ marginBottom: '1rem' }}>
+                <label style={{ marginRight: '0.5rem' }}>Filtrar por categoría:</label>
                 <select
                   value={categoriaFilter}
                   onChange={(e) => setCategoriaFilter(e.target.value)}
                   className="categoria-filter"
+                  style={{ padding: '0.5rem', border: '1px solid #e5e7eb', borderRadius: '0.375rem' }}
                 >
                   <option value="Todas">Todas</option>
                   <option value="Silicona">Silicona</option>
@@ -352,60 +353,64 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 </select>
               </div>
               {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).length > 0 ? (
-                <div className="inventory-grid">
-                  {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).map((material) => (
-                    <div
-                      key={material._id}
-                      className={`inventory-item ${material.hasPendingRestock ? 'pending-restock' : ''}`}
-                    >
-                      <div
-                        className="clickable-area"
-                        onClick={() => handleItemClick(material)}
-                      >
-                        {material.imagen && (
-                          <div className="item-image-container">
-                            <img
-                              src={material.imagen}
-                              alt={material.nombre}
-                              className="item-image"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none'
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="material-header">
-                          <h4>{material.nombre}</h4>
-                          <div className="header-badges">
-                            <span className="categoria-badge">{material.categoria}</span>
+                <div className="table-minimal-container">
+                  <table className="table-minimal">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Descripción</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {materials.filter(m => categoriaFilter === 'Todas' || m.categoria === categoriaFilter).map((material) => (
+                        <tr key={material._id}>
+                          <td className="cell-primary">{material.nombre}</td>
+                          <td>{material.categoria}</td>
+                          <td className="cell-secondary">{material.descripcion || '-'}</td>
+                          <td className="cell-number">{material.stock} {getUnidadBase(material)}</td>
+                          <td>
                             {material.hasPendingRestock && (
-                              <span className="restock-badge" title={`${material.pendingRestockCount} solicitud(es) pendiente(s)`}>
-                                📦 Reposición Solicitada
+                              <span className="badge-minimal badge-warning" title={`${material.pendingRestockCount} solicitud(es) pendiente(s)`}>
+                                Reposición Solicitada
                               </span>
                             )}
-                          </div>
-                        </div>
-                        {material.descripcion && <p className="description">{material.descripcion}</p>}
-                        <div className="item-details">
-                          <span className="detail-badge">Cantidad: {material.stock} {getUnidadBase(material)}</span>
-                        </div>
-                      </div>
-                      {material.hasPendingRestock && onNavigateToRestock && (
-                        <button
-                          className="view-restock-btn"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onNavigateToRestock()
-                          }}
-                        >
-                          Ver Solicitudes →
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                className="btn-icon-minimal"
+                                onClick={() => handleItemClick(material)}
+                                title="Ver/Editar"
+                              >
+                                👁️
+                              </button>
+                              {material.hasPendingRestock && onNavigateToRestock && (
+                                <button
+                                  className="btn-icon-minimal"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    onNavigateToRestock()
+                                  }}
+                                  title="Ver Solicitudes"
+                                >
+                                  📦
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <p className="empty-message">No hay materiales{categoriaFilter !== 'Todas' ? ` en la categoría ${categoriaFilter}` : ' registrados'}</p>
+                <div className="empty-state-minimal">
+                  <p>No hay materiales{categoriaFilter !== 'Todas' ? ` en la categoría ${categoriaFilter}` : ' registrados'}</p>
+                </div>
               )}
             </div>
           )}
@@ -414,35 +419,42 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
           {activeTab === 'components' && (
             <div>
               {components.length > 0 ? (
-                <div className="inventory-grid">
-                  {components.map((component) => (
-                    <div
-                      key={component._id}
-                      className="inventory-item clickable"
-                      onClick={() => handleItemClick(component)}
-                    >
-                      {component.imagen && (
-                        <div className="item-image-container">
-                          <img
-                            src={component.imagen}
-                            alt={component.nombre}
-                            className="item-image"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none'
-                            }}
-                          />
-                        </div>
-                      )}
-                      <h4>{component.nombre}</h4>
-                      {component.descripcion && <p className="description">{component.descripcion}</p>}
-                      <div className="item-details">
-                        <span className="detail-badge">Cantidad: {component.stock}</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="table-minimal-container">
+                  <table className="table-minimal">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {components.map((component) => (
+                        <tr key={component._id}>
+                          <td className="cell-primary">{component.nombre}</td>
+                          <td className="cell-secondary">{component.descripcion || '-'}</td>
+                          <td className="cell-number">{component.stock}</td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                className="btn-icon-minimal"
+                                onClick={() => handleItemClick(component)}
+                                title="Ver/Editar"
+                              >
+                                👁️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <p className="empty-message">No hay componentes registrados</p>
+                <div className="empty-state-minimal">
+                  <p>No hay componentes registrados</p>
+                </div>
               )}
             </div>
           )}
@@ -451,35 +463,42 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
           {activeTab === 'models' && (
             <div>
               {models.length > 0 ? (
-                <div className="inventory-grid">
-                  {models.map((model) => (
-                    <div
-                      key={model._id}
-                      className="inventory-item clickable"
-                      onClick={() => handleItemClick(model)}
-                    >
-                      {model.imagen && (
-                        <div className="item-image-container">
-                          <img
-                            src={model.imagen}
-                            alt={model.nombre}
-                            className="item-image"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none'
-                            }}
-                          />
-                        </div>
-                      )}
-                      <h4>{model.nombre}</h4>
-                      {model.descripcion && <p className="description">{model.descripcion}</p>}
-                      <div className="item-details">
-                        <span className="detail-badge">Cantidad: {model.stock}</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="table-minimal-container">
+                  <table className="table-minimal">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {models.map((model) => (
+                        <tr key={model._id}>
+                          <td className="cell-primary">{model.nombre}</td>
+                          <td className="cell-secondary">{model.descripcion || '-'}</td>
+                          <td className="cell-number">{model.stock}</td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                className="btn-icon-minimal"
+                                onClick={() => handleItemClick(model)}
+                                title="Ver/Editar"
+                              >
+                                👁️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <p className="empty-message">No hay modelos registrados</p>
+                <div className="empty-state-minimal">
+                  <p>No hay modelos registrados</p>
+                </div>
               )}
             </div>
           )}
@@ -488,9 +507,12 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
       {/* Modal para nuevo producto */}
       {showNewItemModal && (
-        <div className="modal-overlay" onClick={() => setShowNewItemModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Selecciona el tipo de producto</h3>
+        <div className="modal-minimal" onClick={() => setShowNewItemModal(false)}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>Selecciona el tipo de producto</h2>
+              <button className="modal-close-btn" onClick={() => setShowNewItemModal(false)}>×</button>
+            </div>
             <div className="modal-options">
               <button
                 className="modal-option"
@@ -544,7 +566,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 <span className="option-desc">Hecho con componentes</span>
               </button>
             </div>
-            <button onClick={() => setShowNewItemModal(false)} className="button secondary">
+            <button onClick={() => setShowNewItemModal(false)} className="btn-minimal btn-secondary-minimal">
               Cancelar
             </button>
           </div>
@@ -553,15 +575,18 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
       {/* Modal de detalle y edición */}
       {showDetailModal && selectedItem && editData && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>
-              {selectedItem.tipo === 'material' && '📦 Detalle del Material'}
-              {selectedItem.tipo === 'component' && '🔧 Detalle del Componente'}
-              {selectedItem.tipo === 'model' && '🏭 Detalle del Modelo'}
-            </h3>
+        <div className="modal-minimal" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>
+                {selectedItem.tipo === 'material' && 'Detalle del Material'}
+                {selectedItem.tipo === 'component' && 'Detalle del Componente'}
+                {selectedItem.tipo === 'model' && 'Detalle del Modelo'}
+              </h2>
+              <button className="modal-close-btn" onClick={() => setShowDetailModal(false)}>×</button>
+            </div>
 
-            <div className="form-group">
+            <div className="form-group-minimal">
               <label>Nombre</label>
               <input
                 type="text"
@@ -570,7 +595,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group-minimal">
               <label>Descripción</label>
               <textarea
                 value={editData.descripcion || ''}
@@ -579,7 +604,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group-minimal">
               <label>Imagen</label>
               <CloudinaryUpload
                 currentImage={editData.imagen}
@@ -589,7 +614,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
             {selectedItem.tipo === 'material' && (
               <>
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Categoría</label>
                   <select
                     value={editData.categoria || 'Silicona'}
@@ -606,7 +631,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                 </div>
 
                 <div className="form-group-row">
-                  <div className="form-group">
+                  <div className="form-group-minimal">
                     <label>Cantidad disponible</label>
                     <input
                       type="number"
@@ -614,7 +639,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                       onChange={(e) => setEditData({ ...editData, stock: parseFloat(e.target.value) })}
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group-minimal">
                     <label>Unidad Base de Fabricación</label>
                     <select
                       value={typeof editData.unidadBase === 'object' ? editData.unidadBase._id : editData.unidadBase}
@@ -628,7 +653,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                     </select>
                   </div>
                 </div>
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Presentaciones de Compra</label>
                   <div className="presentaciones-editable">
                     {editData.presentaciones && editData.presentaciones.length > 0 ? (
@@ -696,7 +721,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             )}
 
             {selectedItem.tipo === 'component' && (
-              <div className="form-group">
+              <div className="form-group-minimal">
                 <label>Materiales del componente</label>
                 {editData.materiales && editData.materiales.length > 0 ? (
                   <div className="editable-components-list">
@@ -822,7 +847,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             )}
 
             {selectedItem.tipo === 'model' && (
-              <div className="form-group">
+              <div className="form-group-minimal">
                 <label>Componentes del modelo</label>
                 {editData.componentes && editData.componentes.length > 0 ? (
                   <div className="editable-components-list">
@@ -941,10 +966,10 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             )}
 
             <div className="modal-actions">
-              <button onClick={handleUpdateItem} className="button" disabled={loading}>
+              <button onClick={handleUpdateItem} className="btn-minimal btn-primary-minimal" disabled={loading}>
                 {loading ? 'Guardando...' : 'Guardar Cambios'}
               </button>
-              <button onClick={handleDeleteItem} className="button danger" disabled={loading}>
+              <button onClick={handleDeleteItem} className="btn-minimal btn-icon-minimal danger" disabled={loading}>
                 Eliminar
               </button>
               <button
@@ -952,7 +977,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                   setShowDetailModal(false)
                   setNewPresentacion({ nombre: '', factorConversion: 0, precioCompra: 0 })
                 }}
-                className="button secondary"
+                className="btn-minimal btn-secondary-minimal"
               >
                 Cancelar
               </button>
@@ -963,11 +988,14 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
       {/* Modal de solicitud de reposición */}
       {showRestockModal && (
-        <div className="modal-overlay" onClick={() => setShowRestockModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>📦 Solicitar Reposición de Inventario</h3>
+        <div className="modal-minimal" onClick={() => setShowRestockModal(false)}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>Solicitar Reposición de Inventario</h2>
+              <button className="modal-close-btn" onClick={() => setShowRestockModal(false)}>×</button>
+            </div>
 
-            <div className="form-group">
+            <div className="form-group-minimal">
               <label>Material a Reponer *</label>
               <select
                 className="form-select"
@@ -990,7 +1018,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
 
             {restockForm.materialId && (
               <>
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Presentación de Compra *</label>
                   <select
                     className="form-select"
@@ -1012,7 +1040,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                   </select>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Cantidad a Solicitar *</label>
                   <input
                     className="form-input"
@@ -1025,7 +1053,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Solicitante *</label>
                   <input
                     className="form-input"
@@ -1036,7 +1064,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Prioridad *</label>
                   <select
                     className="form-select"
@@ -1050,7 +1078,7 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
                   </select>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group-minimal">
                   <label>Notas (opcional)</label>
                   <textarea
                     className="form-textarea"
@@ -1063,15 +1091,15 @@ export default function Inventory({ onNavigateToRestock }: InventoryProps) {
             )}
 
             <div className="modal-actions">
-              <button onClick={handleRestockRequest} className="button" disabled={loading || !restockForm.materialId || !restockForm.presentacion}>
-                {loading ? 'Enviando...' : '✅ Crear Solicitud'}
+              <button onClick={handleRestockRequest} className="btn-minimal btn-primary-minimal" disabled={loading || !restockForm.materialId || !restockForm.presentacion}>
+                {loading ? 'Enviando...' : 'Crear Solicitud'}
               </button>
               <button
                 onClick={() => {
                   setShowRestockModal(false)
                   setRestockForm({ materialId: '', presentacion: '', cantidad: 1, solicitante: '', prioridad: 'media', notas: '' })
                 }}
-                className="button secondary"
+                className="btn-minimal btn-secondary-minimal"
               >
                 Cancelar
               </button>
