@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from 'react'
 
+interface Cliente {
+  _id: string
+  nombre: string
+  codigoCliente: string
+  activo: boolean
+}
+
 interface Cotizacion {
   _id: string
   numero: string
+  numeroSecuencial: number
   numeroRecotizacion?: number
-  cliente: string
+  cliente: Cliente | string
+  clienteNombre: string
   fechaSolicitud: string
   fechaEnvio?: string
   fechaAceptacion?: string
@@ -28,9 +37,11 @@ interface OrdenCompra {
 export default function ControlVentas() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'cotizacion' | 'orden'>('cotizacion')
   const [formData, setFormData] = useState<any>({})
+  const [numeroGenerado, setNumeroGenerado] = useState<string>('')
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -40,9 +51,10 @@ export default function ControlVentas() {
 
   const loadData = async () => {
     try {
-      const [cotRes, ocRes] = await Promise.all([
+      const [cotRes, ocRes, clientesRes] = await Promise.all([
         fetch(`${API_URL}/api/ventas/cotizaciones`),
-        fetch(`${API_URL}/api/ventas/ordenes-compra`)
+        fetch(`${API_URL}/api/ventas/ordenes-compra`),
+        fetch(`${API_URL}/api/ventas/clientes`)
       ])
 
       if (cotRes.ok) {
@@ -54,20 +66,45 @@ export default function ControlVentas() {
         const data = await ocRes.json()
         setOrdenesCompra(data)
       }
+
+      if (clientesRes.ok) {
+        const data = await clientesRes.json()
+        setClientes(data.filter((c: Cliente) => c.activo))
+      }
     } catch (error) {
       console.error('Error loading data:', error)
+    }
+  }
+
+  const loadNumeroForCliente = async (clienteId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/next-numero/${clienteId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setNumeroGenerado(data.numero)
+        setFormData({
+          ...formData,
+          numero: data.numero,
+          numeroSecuencial: data.numeroSecuencial,
+          cliente: clienteId
+        })
+      }
+    } catch (error) {
+      console.error('Error loading numero:', error)
     }
   }
 
   const openModal = (type: 'cotizacion' | 'orden', data?: any) => {
     setModalType(type)
     setFormData(data || {})
+    setNumeroGenerado('')
     setShowModal(true)
   }
 
   const closeModal = () => {
     setShowModal(false)
     setFormData({})
+    setNumeroGenerado('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,10 +150,12 @@ export default function ControlVentas() {
 
   const crearRecotizacion = (cotizacion: Cotizacion) => {
     const numeroRecotizacion = (cotizacion.numeroRecotizacion || 0) + 1
+    const clienteId = typeof cotizacion.cliente === 'object' ? cotizacion.cliente._id : cotizacion.cliente
     openModal('cotizacion', {
       numero: cotizacion.numero,
       numeroRecotizacion,
-      cliente: cotizacion.cliente,
+      numeroSecuencial: cotizacion.numeroSecuencial,
+      cliente: clienteId,
       estado: 'solicitada'
     })
   }
@@ -207,7 +246,7 @@ export default function ControlVentas() {
                     <td className="cell-primary">
                       {cot.numero}{cot.numeroRecotizacion ? `.${cot.numeroRecotizacion}` : ''}
                     </td>
-                    <td>{cot.cliente}</td>
+                    <td>{cot.clienteNombre || (typeof cot.cliente === 'object' ? cot.cliente.nombre : cot.cliente)}</td>
                     <td className="cell-date">{cot.fechaSolicitud ? new Date(cot.fechaSolicitud).toLocaleDateString() : '-'}</td>
                     <td className="cell-date">{cot.fechaEnvio ? new Date(cot.fechaEnvio).toLocaleDateString() : '-'}</td>
                     <td className="cell-date">{cot.fechaAceptacion ? new Date(cot.fechaAceptacion).toLocaleDateString() : '-'}</td>
@@ -333,22 +372,45 @@ export default function ControlVentas() {
               {modalType === 'cotizacion' ? (
                 <>
                   <div className="form-group-minimal">
-                    <label>N° Cotización *</label>
-                    <input
-                      type="text"
-                      value={formData.numero || ''}
-                      onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                    <label>Cliente *</label>
+                    <select
+                      value={typeof formData.cliente === 'object' ? formData.cliente._id : formData.cliente || ''}
+                      onChange={(e) => {
+                        const clienteId = e.target.value
+                        if (clienteId && !formData._id) {
+                          loadNumeroForCliente(clienteId)
+                        } else {
+                          setFormData({ ...formData, cliente: clienteId })
+                        }
+                      }}
                       required
-                    />
+                      disabled={!!formData._id}
+                    >
+                      <option value="">Selecciona un cliente</option>
+                      {clientes.map((cliente) => (
+                        <option key={cliente._id} value={cliente._id}>
+                          {cliente.nombre} ({cliente.codigoCliente})
+                        </option>
+                      ))}
+                    </select>
+                    {formData._id && (
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        El cliente no se puede cambiar al editar
+                      </small>
+                    )}
                   </div>
                   <div className="form-group-minimal">
-                    <label>Cliente *</label>
+                    <label>N° Cotización</label>
                     <input
                       type="text"
-                      value={formData.cliente || ''}
-                      onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
-                      required
+                      value={formData.numero || numeroGenerado || ''}
+                      readOnly
+                      style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      placeholder="Selecciona un cliente primero"
                     />
+                    <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                      El número se genera automáticamente según el cliente
+                    </small>
                   </div>
                   <div className="form-group-minimal">
                     <label>Fecha Solicitud *</label>
