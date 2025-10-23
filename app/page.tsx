@@ -83,14 +83,6 @@ export default function Home() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">
-          bySIMMED ERP
-        </h1>
-        <p className="page-subtitle">
-          Sistema de Gestión Empresarial Integral
-        </p>
-      </div>
 
       <div className="stats-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <div className="stat-card">
