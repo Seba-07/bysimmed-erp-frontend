@@ -3343,7 +3343,7 @@ body {
 
 .page-header-minimal h1 {
   font-size: 1.75rem;
-  color: var(--color-primary);
+  color: var(--text-primary);
   margin: 0;
   font-weight: 700;
 }
@@ -3356,9 +3356,9 @@ body {
 
 /* Compact Table - Single Row Design */
 .table-minimal-container {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border-radius: 8px;
-  border: 1px solid var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   overflow: hidden;
   margin-bottom: 1.5rem;
 }
@@ -3520,12 +3520,14 @@ body {
 }
 
 .btn-secondary-minimal {
-  background: var(--bg-hover);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
 }
 
 .btn-secondary-minimal:hover {
-  background: var(--text-tertiary);
+  background: var(--border-secondary);
+  transform: translateY(-1px);
 }
 
 .btn-success-minimal {
@@ -3675,7 +3677,7 @@ body {
 
 .modal-header-minimal h2 {
   margin: 0;
-  color: var(--color-primary);
+  color: var(--text-primary);
   font-size: 1.5rem;
 }
 

@@ -44,13 +44,6 @@ export default function Sidebar() {
     <>
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-logo">
-            {collapsed ? (
-              <img src="/logobysimmed.png" alt="bySIMMED" className="logo-icon" />
-            ) : (
-              <img src="/logobysimmed.png" alt="bySIMMED" className="logo-full" />
-            )}
-          </div>
           <button
             className="collapse-btn"
             onClick={() => setCollapsed(!collapsed)}
