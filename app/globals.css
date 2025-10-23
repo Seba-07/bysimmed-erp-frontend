@@ -37,40 +37,47 @@
 }
 
 :root[data-theme="light"] {
-  /* Backgrounds - Tema Claro Moderno */
-  --bg-primary: #f8fafc;          /* Gris muy claro para fondo principal */
-  --bg-secondary: #f0f4f8;        /* Gris azulado sutil para sidebar */
-  --bg-tertiary: #e2e8f0;         /* Gris claro para separadores */
-  --bg-hover: #e8edf3;            /* Gris azulado para hover */
+  /* Backgrounds - Tema Claro con Identidad bySIMMED */
+  --bg-primary: #f5f7fa;          /* Gris azulado muy claro para fondo principal */
+  --bg-secondary: #0D5C5C;        /* Teal oscuro de marca para sidebar */
+  --bg-tertiary: #e8f0f0;         /* Teal muy claro para separadores */
+  --bg-hover: #0a4a4a;            /* Teal más oscuro para hover en sidebar */
   --bg-modal: #ffffff;            /* Blanco para modales */
   --bg-card: #ffffff;             /* Blanco para cards */
   --bg-input: #ffffff;            /* Blanco para inputs */
 
   /* Text Colors */
-  --text-primary: #0f172a;        /* Azul muy oscuro para texto principal */
-  --text-secondary: #475569;      /* Gris oscuro para texto secundario */
-  --text-tertiary: #94a3b8;       /* Gris medio para texto terciario */
-  --text-link: #2563eb;           /* Azul oscuro para links */
+  --text-primary: #1a2e2e;        /* Teal muy oscuro para texto principal */
+  --text-secondary: #4a6363;      /* Teal medio para texto secundario */
+  --text-tertiary: #7a9090;       /* Teal claro para texto terciario */
+  --text-link: #0D5C5C;           /* Teal de marca para links */
+
+  /* Sidebar Colors (especiales para modo claro) */
+  --sidebar-text: #ffffff;        /* Texto blanco en sidebar */
+  --sidebar-text-secondary: #c5d9d9; /* Texto secundario en sidebar */
+  --sidebar-active: #F26938;      /* Naranja coral para item activo */
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); /* Hover sutil sobre teal */
 
   /* Borders */
-  --border-primary: #e2e8f0;      /* Gris claro para bordes principales */
-  --border-secondary: #cbd5e1;    /* Gris medio para bordes secundarios */
+  --border-primary: #d4e3e3;      /* Teal muy claro para bordes */
+  --border-secondary: #b8cccc;    /* Teal claro para bordes secundarios */
 
   /* Brand Colors */
-  --color-primary: #3b82f6;       /* Azul vibrante */
-  --color-primary-hover: #2563eb; /* Azul más oscuro para hover */
+  --color-primary: #F26938;       /* Naranja coral de marca */
+  --color-primary-hover: #d8552e; /* Naranja más oscuro para hover */
+  --color-accent: #0D5C5C;        /* Teal de marca como acento */
 
   /* Status Colors */
   --color-success: #059669;       /* Verde oscuro */
-  --color-warning: #d97706;       /* Naranja oscuro */
+  --color-warning: #f59e0b;       /* Naranja advertencia */
   --color-danger: #dc2626;        /* Rojo oscuro */
-  --color-info: #0891b2;          /* Cyan oscuro */
+  --color-info: #0D5C5C;          /* Teal de marca para info */
   --color-neutral: #6b7280;       /* Gris neutro */
 
   /* Shadows - Más suaves en light */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(13, 92, 92, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(13, 92, 92, 0.1), 0 2px 4px -1px rgba(13, 92, 92, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(13, 92, 92, 0.1), 0 4px 6px -2px rgba(13, 92, 92, 0.05);
 }
 
 * {
@@ -3830,4 +3837,64 @@ body {
 .search-input-minimal:focus {
   box-shadow: var(--shadow-md);
   border-color: var(--color-primary);
+}
+
+/* Estilos específicos del sidebar para tema claro */
+[data-theme="light"] .sidebar {
+  background: var(--bg-secondary);
+  box-shadow: 2px 0 8px rgba(13, 92, 92, 0.15);
+}
+
+[data-theme="light"] .sidebar-logo {
+  color: var(--sidebar-text);
+}
+
+[data-theme="light"] .collapse-btn {
+  color: var(--sidebar-text-secondary);
+}
+
+[data-theme="light"] .collapse-btn:hover {
+  color: var(--sidebar-text);
+}
+
+[data-theme="light"] .section-title {
+  color: var(--sidebar-text-secondary);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
+[data-theme="light"] .nav-item {
+  color: var(--sidebar-text);
+  border-left-color: transparent;
+}
+
+[data-theme="light"] .nav-item:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border-left-color: var(--sidebar-active);
+}
+
+[data-theme="light"] .nav-item.active {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-active);
+  border-left-color: var(--sidebar-active);
+  font-weight: 600;
+}
+
+[data-theme="light"] .theme-toggle-btn {
+  color: var(--sidebar-text);
+}
+
+[data-theme="light"] .theme-toggle-btn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+}
+
+[data-theme="light"] .sidebar-header {
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="light"] .sidebar-footer {
+  border-top-color: rgba(255, 255, 255, 0.15);
 }
