@@ -37,47 +37,47 @@
 }
 
 :root[data-theme="light"] {
-  /* Backgrounds - Tema Claro Elegante bySIMMED */
-  --bg-primary: #fafbfc;          /* Gris muy claro para fondo principal */
-  --bg-secondary: #105555;        /* Teal oscuro suavizado para sidebar */
-  --bg-tertiary: #e5eded;         /* Gris teal para separadores */
-  --bg-hover: #0d4444;            /* Teal más oscuro para hover en sidebar */
+  /* Backgrounds - Tema Claro Elegante y Profesional */
+  --bg-primary: #f8f9fa;          /* Gris muy claro, casi blanco */
+  --bg-secondary: #0a4d4d;        /* Teal profundo para sidebar */
+  --bg-tertiary: #e9ecef;         /* Gris neutro para separadores */
+  --bg-hover: #083d3d;            /* Teal más oscuro para hover en sidebar */
   --bg-modal: #ffffff;            /* Blanco para modales */
   --bg-card: #ffffff;             /* Blanco para cards */
   --bg-input: #ffffff;            /* Blanco para inputs */
 
-  /* Text Colors */
-  --text-primary: #1f2937;        /* Gris oscuro para texto principal */
-  --text-secondary: #6b7280;      /* Gris medio para texto secundario */
-  --text-tertiary: #9ca3af;       /* Gris claro para texto terciario */
-  --text-link: #105555;           /* Teal para links */
+  /* Text Colors - Profesionales y legibles */
+  --text-primary: #2c3e50;        /* Azul gris oscuro profesional */
+  --text-secondary: #5a6c7d;      /* Gris azulado medio */
+  --text-tertiary: #95a5a6;       /* Gris claro */
+  --text-link: #0a6b6b;           /* Teal suave para links */
 
-  /* Sidebar Colors (especiales para modo claro) */
+  /* Sidebar Colors */
   --sidebar-text: #ffffff;        /* Texto blanco en sidebar */
-  --sidebar-text-secondary: #b8d1d1; /* Texto secundario en sidebar */
-  --sidebar-active: #F26938;      /* Naranja coral para item activo */
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.08); /* Hover muy sutil */
+  --sidebar-text-secondary: #a0d1d1; /* Texto secundario en sidebar */
+  --sidebar-active: #ff8c61;      /* Naranja suave para item activo */
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); /* Hover sutil */
 
   /* Borders */
-  --border-primary: #e5e7eb;      /* Gris claro para bordes */
-  --border-secondary: #d1d5db;    /* Gris medio para bordes secundarios */
+  --border-primary: #e1e8ed;      /* Gris azulado claro */
+  --border-secondary: #cbd5e0;    /* Gris azulado medio */
 
-  /* Brand Colors */
-  --color-primary: #F26938;       /* Naranja coral de marca */
-  --color-primary-hover: #d8552e; /* Naranja más oscuro para hover */
-  --color-accent: #105555;        /* Teal suavizado como acento */
+  /* Brand Colors - Suavizados y profesionales */
+  --color-primary: #0a6b6b;       /* Teal suave como primario */
+  --color-primary-hover: #085555; /* Teal más oscuro para hover */
+  --color-accent: #ff9f7a;        /* Coral suave como acento */
 
   /* Status Colors */
-  --color-success: #059669;       /* Verde oscuro */
+  --color-success: #10b981;       /* Verde moderno */
   --color-warning: #f59e0b;       /* Naranja advertencia */
-  --color-danger: #dc2626;        /* Rojo oscuro */
-  --color-info: #0D5C5C;          /* Teal de marca para info */
+  --color-danger: #ef4444;        /* Rojo moderno */
+  --color-info: #0a6b6b;          /* Teal para info */
   --color-neutral: #6b7280;       /* Gris neutro */
 
-  /* Shadows - Elegantes y sutiles */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  /* Shadows - Más sutiles y profesionales */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -140,24 +140,28 @@ body {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  padding: 0.5rem 0;
 }
 
 .logo-full {
-  height: 40px;
+  height: 55px;
   width: auto;
+  max-width: 200px;
   object-fit: contain;
   transition: all 0.3s ease;
+  filter: brightness(1.1);
 }
 
 .logo-icon {
-  height: 35px;
+  height: 45px;
   width: auto;
   object-fit: contain;
   transition: all 0.3s ease;
+  filter: brightness(1.1);
 }
 
 .sidebar.collapsed .sidebar-logo {
-  padding: 0;
+  padding: 0.5rem 0;
 }
 
 .collapse-btn {
@@ -272,11 +276,11 @@ body {
   }
 
   .logo-full {
-    height: 35px;
+    height: 45px;
   }
 
   .logo-icon {
-    height: 30px;
+    height: 40px;
   }
 
   .nav-label,
@@ -3732,74 +3736,80 @@ body {
 
 /* Page Header */
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .page-title {
   font-size: 2.5rem;
-  color: var(--color-primary);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .page-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .section-title {
   color: var(--text-primary);
   margin-bottom: 1.5rem;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 600;
+  letter-spacing: -0.3px;
 }
 
 /* Stats Cards */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 2rem;
 }
 
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .stat-card:hover {
   border-color: var(--border-secondary);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
 
 .stat-value {
-  font-size: 2.25rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1;
-  margin-bottom: 0.5rem;
+  line-height: 1.1;
+  margin-bottom: 0.65rem;
 }
 
 .stat-link {
-  font-size: 0.85rem;
-  color: var(--color-primary);
+  font-size: 0.825rem;
+  color: var(--text-link);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .stat-link:hover {
@@ -3836,27 +3846,28 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.75rem;
   height: 100%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .quick-access-card:hover {
   border-color: var(--color-primary);
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 .quick-icon {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   margin-bottom: 0.75rem;
+  opacity: 0.9;
 }
 
 .quick-title {
-  color: var(--color-primary);
-  font-size: 1.25rem;
+  color: var(--text-primary);
+  font-size: 1.15rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
@@ -3864,7 +3875,7 @@ body {
 .quick-description {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Sidebar Footer y Theme Toggle */
