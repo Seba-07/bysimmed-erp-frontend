@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useTheme } from '../contexts/ThemeContext'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   const menuItems = [
     { href: '/', icon: '🏠', label: 'Inicio' },
@@ -88,6 +90,17 @@ export default function Sidebar() {
             }
           })}
         </nav>
+
+        <div className="sidebar-footer">
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            <span className="nav-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
+            {!collapsed && <span className="nav-label">{theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Spacer para el contenido principal */}
