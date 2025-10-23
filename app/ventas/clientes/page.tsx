@@ -58,10 +58,12 @@ export default function Clientes() {
   }
 
   const generarCodigo = async () => {
-    if (!formData.nombre) {
+    if (!formData.nombre || formData.nombre.trim() === '') {
       setError('Ingresa el nombre del cliente primero')
       return
     }
+
+    setError(null)
 
     try {
       const res = await fetch(`${API_URL}/api/ventas/clientes/generar-codigo`, {
@@ -73,9 +75,13 @@ export default function Clientes() {
       if (res.ok) {
         const data = await res.json()
         setFormData({ ...formData, codigoCliente: data.codigoCliente })
+      } else {
+        const errorData = await res.json()
+        setError(errorData.message || 'Error al generar código')
       }
     } catch (error) {
       console.error('Error generating code:', error)
+      setError('Error de conexión al generar código')
     }
   }
 
@@ -83,6 +89,13 @@ export default function Clientes() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    // Validar que el código no esté vacío
+    if (!formData.codigoCliente || formData.codigoCliente.trim() === '') {
+      setError('El código de cliente es requerido')
+      setLoading(false)
+      return
+    }
 
     const url = formData._id
       ? `${API_URL}/api/ventas/clientes/${formData._id}`
@@ -97,16 +110,16 @@ export default function Clientes() {
         body: JSON.stringify(formData)
       })
 
-      const data = await res.json()
-
       if (res.ok) {
-        loadClientes()
+        await loadClientes()
         closeModal()
       } else {
+        const data = await res.json()
         setError(data.message || 'Error al guardar cliente')
       }
-    } catch (error) {
-      setError('Error de conexión')
+    } catch (error: any) {
+      console.error('Error saving cliente:', error)
+      setError('Error de conexión: ' + (error.message || 'No se pudo conectar con el servidor'))
     } finally {
       setLoading(false)
     }
