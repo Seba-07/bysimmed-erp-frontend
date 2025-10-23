@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import SWRegister from './components/SWRegister'
 import Sidebar from './components/Sidebar'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 export const metadata: Metadata = {
   title: 'bySIMMED ERP — Sistema de Gestión Empresarial',
@@ -33,13 +34,15 @@ export default function RootLayout({
         <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
       </head>
       <body>
-        <div className="app-layout">
-          <Sidebar />
-          <main className="main-content">
-            {children}
-          </main>
-        </div>
-        <SWRegister />
+        <ThemeProvider>
+          <div className="app-layout">
+            <Sidebar />
+            <main className="main-content">
+              {children}
+            </main>
+          </div>
+          <SWRegister />
+        </ThemeProvider>
       </body>
     </html>
   )
