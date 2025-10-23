@@ -39,12 +39,12 @@
 :root[data-theme="light"] {
   /* Backgrounds - Tema Claro Moderno */
   --bg-primary: #f8fafc;          /* Gris muy claro para fondo principal */
-  --bg-secondary: #ffffff;        /* Blanco para sidebar y cards */
+  --bg-secondary: #f0f4f8;        /* Gris azulado sutil para sidebar */
   --bg-tertiary: #e2e8f0;         /* Gris claro para separadores */
-  --bg-hover: #f1f5f9;            /* Gris muy sutil para hover */
+  --bg-hover: #e8edf3;            /* Gris azulado para hover */
   --bg-modal: #ffffff;            /* Blanco para modales */
   --bg-card: #ffffff;             /* Blanco para cards */
-  --bg-input: #f8fafc;            /* Gris muy claro para inputs */
+  --bg-input: #ffffff;            /* Blanco para inputs */
 
   /* Text Colors */
   --text-primary: #0f172a;        /* Azul muy oscuro para texto principal */
