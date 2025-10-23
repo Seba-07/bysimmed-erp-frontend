@@ -3751,11 +3751,11 @@ body {
 }
 
 .page-title {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 .page-subtitle {
@@ -4005,6 +4005,44 @@ body {
 
 [data-theme="light"] .theme-toggle-btn {
   color: var(--sidebar-text);
+}
+
+/* TEMA CLARO: Eliminar verde de TODOS los elementos excepto sidebar */
+[data-theme="light"] .menu-card,
+[data-theme="light"] .instructions,
+[data-theme="light"] .tab-button,
+[data-theme="light"] .action-section,
+[data-theme="light"] .nested-list,
+[data-theme="light"] .inventory-item,
+[data-theme="light"] .filter-select,
+[data-theme="light"] .order-card,
+[data-theme="light"] .added-product-item,
+[data-theme="light"] .model-component-item,
+[data-theme="light"] .add-component-select,
+[data-theme="light"] .editable-component-item,
+[data-theme="light"] .orders-table thead,
+[data-theme="light"] .status-badge,
+[data-theme="light"] .time-box,
+[data-theme="light"] .deadline-box,
+[data-theme="light"] .product-card,
+[data-theme="light"] .product-item-compact,
+[data-theme="light"] .component-card-modal,
+[data-theme="light"] .calendar-nav-btn,
+[data-theme="light"] .calendar-day,
+[data-theme="light"] .material-categories,
+[data-theme="light"] .material-card,
+[data-theme="light"] .presentaciones-section,
+[data-theme="light"] .restock-request-card,
+[data-theme="light"] .search-input-minimal,
+[data-theme="light"] .select-minimal {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+[data-theme="light"] .orders-table tbody tr:hover,
+[data-theme="light"] .checkbox-label:hover,
+[data-theme="light"] .filter-tab:hover {
+  background: var(--bg-tertiary) !important;
 }
 
 [data-theme="light"] .theme-toggle-btn:hover {
