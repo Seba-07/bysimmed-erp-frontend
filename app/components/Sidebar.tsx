@@ -44,12 +44,42 @@ export default function Sidebar() {
     <>
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
+          {!collapsed && (
+            <div className="sidebar-logo">
+              <span style={{
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                color: 'white',
+                letterSpacing: '-0.02em'
+              }}>
+                bySIMMED
+              </span>
+            </div>
+          )}
           <button
             className="collapse-btn"
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? 'Expandir' : 'Colapsar'}
+            aria-label={collapsed ? 'Expandir' : 'Colapsar'}
           >
-            {collapsed ? '▶' : '◀'}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              style={{
+                transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              <path
+                d="M10 4L6 8L10 12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
         </div>
 
@@ -93,6 +123,7 @@ export default function Sidebar() {
             className="theme-toggle-btn"
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
             <span className="nav-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
             {!collapsed && <span className="nav-label">{theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}</span>}
@@ -100,7 +131,6 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Spacer para el contenido principal */}
       <div className={`sidebar-spacer ${collapsed ? 'collapsed' : ''}`} />
     </>
   )
