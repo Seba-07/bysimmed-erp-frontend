@@ -37,35 +37,35 @@
 }
 
 :root[data-theme="light"] {
-  /* Backgrounds - Tema Claro con Identidad bySIMMED */
-  --bg-primary: #f5f7fa;          /* Gris azulado muy claro para fondo principal */
-  --bg-secondary: #0D5C5C;        /* Teal oscuro de marca para sidebar */
-  --bg-tertiary: #e8f0f0;         /* Teal muy claro para separadores */
-  --bg-hover: #0a4a4a;            /* Teal más oscuro para hover en sidebar */
+  /* Backgrounds - Tema Claro Elegante bySIMMED */
+  --bg-primary: #fafbfc;          /* Gris muy claro para fondo principal */
+  --bg-secondary: #105555;        /* Teal oscuro suavizado para sidebar */
+  --bg-tertiary: #e5eded;         /* Gris teal para separadores */
+  --bg-hover: #0d4444;            /* Teal más oscuro para hover en sidebar */
   --bg-modal: #ffffff;            /* Blanco para modales */
   --bg-card: #ffffff;             /* Blanco para cards */
   --bg-input: #ffffff;            /* Blanco para inputs */
 
   /* Text Colors */
-  --text-primary: #1a2e2e;        /* Teal muy oscuro para texto principal */
-  --text-secondary: #4a6363;      /* Teal medio para texto secundario */
-  --text-tertiary: #7a9090;       /* Teal claro para texto terciario */
-  --text-link: #0D5C5C;           /* Teal de marca para links */
+  --text-primary: #1f2937;        /* Gris oscuro para texto principal */
+  --text-secondary: #6b7280;      /* Gris medio para texto secundario */
+  --text-tertiary: #9ca3af;       /* Gris claro para texto terciario */
+  --text-link: #105555;           /* Teal para links */
 
   /* Sidebar Colors (especiales para modo claro) */
   --sidebar-text: #ffffff;        /* Texto blanco en sidebar */
-  --sidebar-text-secondary: #c5d9d9; /* Texto secundario en sidebar */
+  --sidebar-text-secondary: #b8d1d1; /* Texto secundario en sidebar */
   --sidebar-active: #F26938;      /* Naranja coral para item activo */
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); /* Hover sutil sobre teal */
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08); /* Hover muy sutil */
 
   /* Borders */
-  --border-primary: #d4e3e3;      /* Teal muy claro para bordes */
-  --border-secondary: #b8cccc;    /* Teal claro para bordes secundarios */
+  --border-primary: #e5e7eb;      /* Gris claro para bordes */
+  --border-secondary: #d1d5db;    /* Gris medio para bordes secundarios */
 
   /* Brand Colors */
   --color-primary: #F26938;       /* Naranja coral de marca */
   --color-primary-hover: #d8552e; /* Naranja más oscuro para hover */
-  --color-accent: #0D5C5C;        /* Teal de marca como acento */
+  --color-accent: #105555;        /* Teal suavizado como acento */
 
   /* Status Colors */
   --color-success: #059669;       /* Verde oscuro */
@@ -74,10 +74,10 @@
   --color-info: #0D5C5C;          /* Teal de marca para info */
   --color-neutral: #6b7280;       /* Gris neutro */
 
-  /* Shadows - Más suaves en light */
-  --shadow-sm: 0 1px 2px 0 rgba(13, 92, 92, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(13, 92, 92, 0.1), 0 2px 4px -1px rgba(13, 92, 92, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(13, 92, 92, 0.1), 0 4px 6px -2px rgba(13, 92, 92, 0.05);
+  /* Shadows - Elegantes y sutiles */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -136,16 +136,28 @@ body {
 }
 
 .sidebar-logo {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-primary);
-  margin: 0;
-  white-space: nowrap;
-  transition: font-size 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.logo-full {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+.logo-icon {
+  height: 35px;
+  width: auto;
+  object-fit: contain;
+  transition: all 0.3s ease;
 }
 
 .sidebar.collapsed .sidebar-logo {
-  font-size: 1.2rem;
+  padding: 0;
 }
 
 .collapse-btn {
@@ -259,8 +271,12 @@ body {
     width: 70px;
   }
 
-  .sidebar-logo {
-    font-size: 1.2rem;
+  .logo-full {
+    height: 35px;
+  }
+
+  .logo-icon {
+    height: 30px;
   }
 
   .nav-label,
@@ -3714,6 +3730,30 @@ body {
   border-top: 1px solid var(--bg-tertiary);
 }
 
+/* Page Header */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+  font-weight: 800;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.section-title {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 /* Stats Cards */
 .stats-grid {
   display: grid;
@@ -3723,31 +3763,47 @@ body {
 }
 
 .stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--bg-tertiary);
-  border-radius: 8px;
-  padding: 1.25rem;
-  transition: all 0.2s;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card:hover {
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
+  border-color: var(--border-secondary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.8px;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--text-primary);
   line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-link {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.stat-link:hover {
+  color: var(--color-primary-hover);
 }
 
 .stat-change {
@@ -3762,6 +3818,53 @@ body {
 
 .stat-change.negative {
   color: var(--color-danger);
+}
+
+/* Quick Access Cards */
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.quick-link {
+  text-decoration: none;
+}
+
+.quick-access-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-access-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.quick-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.quick-title {
+  color: var(--color-primary);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.quick-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* Sidebar Footer y Theme Toggle */
@@ -3843,10 +3946,6 @@ body {
 [data-theme="light"] .sidebar {
   background: var(--bg-secondary);
   box-shadow: 2px 0 8px rgba(13, 92, 92, 0.15);
-}
-
-[data-theme="light"] .sidebar-logo {
-  color: var(--sidebar-text);
 }
 
 [data-theme="light"] .collapse-btn {

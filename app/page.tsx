@@ -83,11 +83,11 @@ export default function Home() {
 
   return (
     <div className="page-container">
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#3b82f6', marginBottom: '0.5rem', fontWeight: 800 }}>
+      <div className="page-header">
+        <h1 className="page-title">
           bySIMMED ERP
         </h1>
-        <p style={{ fontSize: '1.1rem', color: '#94a3b8' }}>
+        <p className="page-subtitle">
           Sistema de Gestión Empresarial Integral
         </p>
       </div>
@@ -96,28 +96,28 @@ export default function Home() {
         <div className="stat-card">
           <div className="stat-label">Cotizaciones Activas</div>
           <div className="stat-value">{stats.cotizaciones}</div>
-          <Link href="/ventas/control" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/ventas/control" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Equipos en Post-Venta</div>
           <div className="stat-value">{stats.equiposPostVenta}</div>
-          <Link href="/ventas/post-venta" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/ventas/post-venta" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Órdenes en Producción</div>
           <div className="stat-value">{stats.ordenesProduccion}</div>
-          <Link href="/produccion" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/produccion" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Stock Total Items</div>
           <div className="stat-value">{stats.stockTotal}</div>
-          <Link href="/inventario" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/inventario" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
@@ -127,86 +127,81 @@ export default function Home() {
         <div className="stat-card">
           <div className="stat-label">Compras Pendientes</div>
           <div className="stat-value">{stats.solicitudesCompra}</div>
-          <Link href="/finanzas/compras" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/finanzas/compras" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Por Cobrar</div>
           <div className="stat-value">${stats.cuentasPorCobrar.toLocaleString()}</div>
-          <Link href="/finanzas/cuentas" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/finanzas/cuentas" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Gastos Pendientes</div>
           <div className="stat-value">${stats.gastosPendientes.toLocaleString()}</div>
-          <Link href="/finanzas/gastos" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/finanzas/gastos" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
         <div className="stat-card">
           <div className="stat-label">Saldo Bancos</div>
           <div className="stat-value">${stats.saldoBancos.toLocaleString()}</div>
-          <Link href="/finanzas/cuentas" style={{ fontSize: '0.85rem', color: '#3b82f6', textDecoration: 'none' }}>
+          <Link href="/finanzas/cuentas" className="stat-link">
             Ver Detalle →
           </Link>
         </div>
       </div>
 
-      <h2 style={{ color: '#60a5fa', marginBottom: '1.5rem', fontSize: '1.5rem' }}>Acceso Rápido</h2>
+      <h2 className="section-title">Acceso Rápido</h2>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '2rem'
-      }}>
-        <Link href="/ventas/control" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📊</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Control de Ventas</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Cotizaciones, OC, facturas y ciclo de venta</p>
+      <div className="quick-access-grid">
+        <Link href="/ventas/control" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">📊</div>
+            <h3 className="quick-title">Control de Ventas</h3>
+            <p className="quick-description">Cotizaciones, OC, facturas y ciclo de venta</p>
           </div>
         </Link>
 
-        <Link href="/ventas/post-venta" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔧</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Post-Venta</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Clientes, equipos y mantenciones</p>
+        <Link href="/ventas/post-venta" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">🔧</div>
+            <h3 className="quick-title">Post-Venta</h3>
+            <p className="quick-description">Clientes, equipos y mantenciones</p>
           </div>
         </Link>
 
-        <Link href="/finanzas/compras" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>💰</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Finanzas</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Compras, gastos, proveedores y cuentas</p>
+        <Link href="/finanzas/compras" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">💰</div>
+            <h3 className="quick-title">Finanzas</h3>
+            <p className="quick-description">Compras, gastos, proveedores y cuentas</p>
           </div>
         </Link>
 
-        <Link href="/produccion" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🏭</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Producción</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Órdenes, monitoreo y control</p>
+        <Link href="/produccion" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">🏭</div>
+            <h3 className="quick-title">Producción</h3>
+            <p className="quick-description">Órdenes, monitoreo y control</p>
           </div>
         </Link>
 
-        <Link href="/inventario" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📦</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Inventario</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Materiales, componentes y modelos</p>
+        <Link href="/inventario" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">📦</div>
+            <h3 className="quick-title">Inventario</h3>
+            <p className="quick-description">Materiales, componentes y modelos</p>
           </div>
         </Link>
 
-        <Link href="/reposiciones" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer', height: '100%' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔄</div>
-            <h3 style={{ color: '#3b82f6', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Reposiciones</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Solicitudes de reabastecimiento</p>
+        <Link href="/reposiciones" className="quick-link">
+          <div className="quick-access-card">
+            <div className="quick-icon">🔄</div>
+            <h3 className="quick-title">Reposiciones</h3>
+            <p className="quick-description">Solicitudes de reabastecimiento</p>
           </div>
         </Link>
       </div>
