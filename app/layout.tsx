@@ -1,17 +1,18 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import SWRegister from './components/SWRegister'
+import Sidebar from './components/Sidebar'
 
 export const metadata: Metadata = {
-  title: 'bySIMMED — Hello PWA',
-  description: 'PWA de validación para bySIMMED',
+  title: 'bySIMMED ERP — Sistema de Gestión Empresarial',
+  description: 'Sistema ERP completo para gestión de ventas, finanzas, inventario y producción',
   manifest: '/manifest.json',
   themeColor: '#0f172a',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'bySIMMED PWA'
+    title: 'bySIMMED ERP'
   },
   icons: {
     apple: '/icons/icon-512.png'
@@ -32,7 +33,12 @@ export default function RootLayout({
         <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
       </head>
       <body>
-        {children}
+        <div className="app-layout">
+          <Sidebar />
+          <main className="main-content">
+            {children}
+          </main>
+        </div>
         <SWRegister />
       </body>
     </html>
