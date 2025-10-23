@@ -1323,7 +1323,7 @@ tbody tr:last-child td {
 }
 
 .modal-header-minimal {
-  padding: 1.5rem;
+  padding: 2rem;
   border-bottom: 1px solid var(--border-secondary);
   display: flex;
   align-items: center;
@@ -1355,12 +1355,12 @@ tbody tr:last-child td {
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .modal-footer,
 .modal-actions {
-  padding: 1.5rem;
+  padding: 2rem;
   border-top: 1px solid var(--border-secondary);
   display: flex;
   gap: 0.75rem;
@@ -1440,6 +1440,45 @@ tbody tr:last-child td {
 .option-desc {
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+.request-detail-section {
+  margin-bottom: 1.5rem;
+  padding: 0 2rem;
+}
+
+.request-detail-section h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.request-detail-section p {
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.request-detail-section textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.request-detail-section textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* ================================================================
