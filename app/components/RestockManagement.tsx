@@ -152,9 +152,9 @@ export default function RestockManagement() {
   }
 
   return (
-    <div className="section">
-      <div className="inventory-header">
-        <h2>📦 Gestión de Reposiciones</h2>
+    <div className="page-container">
+      <div className="page-header-minimal">
+        <h1>Gestión de Reposiciones</h1>
       </div>
 
       {error && (
@@ -189,51 +189,79 @@ export default function RestockManagement() {
       {loading ? (
         <p className="loading-message">Cargando solicitudes...</p>
       ) : requests.length === 0 ? (
-        <p className="empty-message">
-          {filter === 'activas' ? 'No hay solicitudes activas' :
-           filter === 'historial' ? 'No hay historial de solicitudes' :
-           'No hay solicitudes registradas'}
-        </p>
+        <div className="empty-state-minimal">
+          <p>
+            {filter === 'activas' ? 'No hay solicitudes activas' :
+             filter === 'historial' ? 'No hay historial de solicitudes' :
+             'No hay solicitudes registradas'}
+          </p>
+        </div>
       ) : (
-        <div className="restock-requests-list">
-          {requests.map((request) => (
-            <div
-              key={request._id}
-              className="restock-request-card"
-              onClick={() => {
-                setSelectedRequest(request)
-                setNotasInternas(request.notasInternas || '')
-                setShowDetailModal(true)
-              }}
-            >
-              <div className="request-header">
-                <h4>{request.materialId.nombre}</h4>
-                <span
-                  className="estado-badge"
-                  style={{ backgroundColor: getEstadoColor(request.estado) }}
-                >
-                  {getEstadoLabel(request.estado)}
-                </span>
-              </div>
-
-              <div className="request-details">
-                <p><strong>Solicitante:</strong> {request.solicitante}</p>
-                <p><strong>Prioridad:</strong> <span className={`prioridad-${request.prioridad}`}>{request.prioridad.charAt(0).toUpperCase() + request.prioridad.slice(1)}</span></p>
-                <p><strong>Presentación:</strong> {request.presentacion}</p>
-                <p><strong>Cantidad:</strong> {request.cantidad} unidades</p>
-                <p><strong>Solicitado:</strong> {formatDate(request.fechaSolicitud)}</p>
-                {request.notas && <p className="request-notes"><em>{request.notas}</em></p>}
-              </div>
-            </div>
-          ))}
+        <div className="table-minimal-container">
+          <table className="table-minimal">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Solicitante</th>
+                <th>Prioridad</th>
+                <th>Presentación</th>
+                <th>Cantidad</th>
+                <th>Estado</th>
+                <th>Fecha Solicitud</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((request) => (
+                <tr key={request._id}>
+                  <td className="cell-primary">{request.materialId.nombre}</td>
+                  <td>{request.solicitante}</td>
+                  <td>
+                    <span className={`prioridad-${request.prioridad}`}>
+                      {request.prioridad.charAt(0).toUpperCase() + request.prioridad.slice(1)}
+                    </span>
+                  </td>
+                  <td className="cell-secondary">{request.presentacion}</td>
+                  <td className="cell-number">{request.cantidad} unidades</td>
+                  <td>
+                    <span
+                      className="badge-minimal"
+                      style={{ backgroundColor: getEstadoColor(request.estado), color: '#fff', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem' }}
+                    >
+                      {getEstadoLabel(request.estado)}
+                    </span>
+                  </td>
+                  <td className="cell-date">{formatDate(request.fechaSolicitud)}</td>
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        className="btn-icon-minimal"
+                        onClick={() => {
+                          setSelectedRequest(request)
+                          setNotasInternas(request.notasInternas || '')
+                          setShowDetailModal(true)
+                        }}
+                        title="Ver Detalles"
+                      >
+                        👁️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Modal de detalle */}
       {showDetailModal && selectedRequest && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📦 Detalle de Solicitud</h3>
+        <div className="modal-minimal" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>Detalle de Solicitud</h2>
+              <button className="modal-close-btn" onClick={() => setShowDetailModal(false)}>×</button>
+            </div>
 
             <div className="request-detail-section">
               <h4>Material</h4>
@@ -335,10 +363,10 @@ export default function RestockManagement() {
                           handleStateChange(selectedRequest._id, nextState)
                         }
                       }}
-                      className={`button ${nextState === 'cancelada' ? 'danger' : ''}`}
+                      className={`btn-minimal ${nextState === 'cancelada' ? 'btn-icon-minimal danger' : 'btn-primary-minimal'}`}
                       disabled={loading}
                     >
-                      {nextState === 'cancelada' ? '❌ Cancelar' : `➡️ ${getEstadoLabel(nextState)}`}
+                      {nextState === 'cancelada' ? 'Cancelar' : getEstadoLabel(nextState)}
                     </button>
                   ))}
                 </div>
@@ -346,7 +374,7 @@ export default function RestockManagement() {
             )}
 
             <div className="modal-actions">
-              <button onClick={() => setShowDetailModal(false)} className="button secondary">
+              <button onClick={() => setShowDetailModal(false)} className="btn-minimal btn-secondary-minimal">
                 Cerrar
               </button>
             </div>

@@ -693,10 +693,10 @@ export default function ProductionPanel() {
   }
 
   return (
-    <div className="section">
-      <div className="production-panel-header">
-        <h2>📋 Panel de Producción</h2>
-        <p className="subtitle">Órdenes priorizadas por fecha de entrega</p>
+    <div className="page-container">
+      <div className="page-header-minimal">
+        <h1>Panel de Producción</h1>
+        <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>Órdenes priorizadas por fecha de entrega</p>
       </div>
 
       {error && (
@@ -843,9 +843,12 @@ export default function ProductionPanel() {
 
       {/* Modal de componentes */}
       {showComponentsModal && timers[showComponentsModal] && (
-        <div className="modal-overlay" onClick={closeComponentsModal}>
-          <div className="modal-content components-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>🔧 Componentes en Fabricación</h3>
+        <div className="modal-minimal" onClick={closeComponentsModal}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>Componentes en Fabricación</h2>
+              <button className="modal-close-btn" onClick={closeComponentsModal}>×</button>
+            </div>
 
             <div className="components-list-modal">
               {timers[showComponentsModal].components.map((comp, idx) => {
@@ -946,9 +949,11 @@ export default function ProductionPanel() {
               })}
             </div>
 
-            <button className="button" onClick={closeComponentsModal}>
-              Cerrar
-            </button>
+            <div className="modal-actions">
+              <button className="btn-minimal btn-secondary-minimal" onClick={closeComponentsModal}>
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}

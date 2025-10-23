@@ -461,23 +461,24 @@ export default function Production() {
   }
 
   return (
-    <div className="section">
-      <div className="production-header">
-        <h2>🏭 Órdenes de Fabricación</h2>
-        <div className="header-actions">
+    <div className="page-container">
+      <div className="page-header-minimal">
+        <h1>Órdenes de Fabricación</h1>
+        <div className="header-actions-minimal">
           <select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
             className="filter-select"
+            style={{ padding: '0.5rem 1rem', border: '1px solid #e5e7eb', borderRadius: '0.375rem', backgroundColor: '#fff' }}
           >
             <option value="">Todos los estados</option>
-            <option value="activa">🟢 Activas</option>
-            <option value="en_proceso">⚙️ En Proceso</option>
-            <option value="completada">✅ Completadas</option>
-            <option value="cancelada">❌ Canceladas</option>
+            <option value="activa">Activas</option>
+            <option value="en_proceso">En Proceso</option>
+            <option value="completada">Completadas</option>
+            <option value="cancelada">Canceladas</option>
           </select>
           <button
-            className="button"
+            className="btn-minimal btn-primary-minimal"
             onClick={() => {
               // Asegurar que el número de orden esté generado antes de abrir modal
               if (!nextOrderNumber || nextOrderNumber === '') {
@@ -487,7 +488,7 @@ export default function Production() {
               setShowNewOrderModal(true)
             }}
           >
-            ➕ Nueva Orden
+            + Nueva Orden
           </button>
         </div>
       </div>
@@ -501,8 +502,8 @@ export default function Production() {
       {loading ? (
         <p>Cargando órdenes...</p>
       ) : orders.length > 0 ? (
-        <div className="orders-table-container">
-          <table className="orders-table">
+        <div className="table-minimal-container">
+          <table className="table-minimal">
             <thead>
               <tr>
                 <th>Número</th>
@@ -557,30 +558,33 @@ export default function Production() {
           </table>
         </div>
       ) : (
-        <div className="empty-state">
+        <div className="empty-state-minimal">
           <p>No hay órdenes de fabricación</p>
-          <p className="hint">Crea una nueva orden para comenzar</p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>Crea una nueva orden para comenzar</p>
         </div>
       )}
 
       {/* Modal para nueva orden */}
       {showNewOrderModal && (
-        <div className="modal-overlay" onClick={() => setShowNewOrderModal(false)}>
-          <div className="modal-content production-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Nueva Orden de Fabricación</h3>
+        <div className="modal-minimal" onClick={() => setShowNewOrderModal(false)}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-minimal">
+              <h2>Nueva Orden de Fabricación</h2>
+              <button className="modal-close-btn" onClick={() => setShowNewOrderModal(false)}>×</button>
+            </div>
             <form onSubmit={handleCreateOrder} className="production-form">
-              <div className="form-field">
+              <div className="form-group-minimal">
                 <label>Número de Orden</label>
                 <input
                   type="text"
                   value={nextOrderNumber}
                   disabled
-                  style={{ backgroundColor: '#1e293b', color: '#94a3b8', cursor: 'not-allowed' }}
+                  style={{ backgroundColor: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed' }}
                   title="Generado automáticamente"
                 />
               </div>
 
-              <div className="form-field">
+              <div className="form-group-minimal">
                 <label>Cliente *</label>
                 <input
                   type="text"
@@ -591,7 +595,7 @@ export default function Production() {
                 />
               </div>
 
-              <div className="form-field">
+              <div className="form-group-minimal">
                 <label>Fecha límite *</label>
                 <input
                   type="date"
@@ -603,7 +607,7 @@ export default function Production() {
                 />
               </div>
 
-              <div className="form-field">
+              <div className="form-group-minimal">
                 <label>Notas (opcional)</label>
                 <textarea
                   value={orderForm.notas}
@@ -639,18 +643,18 @@ export default function Production() {
                 {/* Formulario para agregar producto */}
                 <div className="add-product-form">
                   <div className="form-row">
-                    <div className="form-field">
+                    <div className="form-group-minimal">
                       <label>Tipo</label>
                       <select
                         value={currentProduct.itemType}
                         onChange={(e) => handleProductTypeChange(e.target.value as 'Component' | 'Model')}
                       >
-                        <option value="Component">🔧 Componente</option>
-                        <option value="Model">🏭 Modelo</option>
+                        <option value="Component">Componente</option>
+                        <option value="Model">Modelo</option>
                       </select>
                     </div>
 
-                    <div className="form-field">
+                    <div className="form-group-minimal">
                       <label>Producto</label>
                       <select
                         value={currentProduct.itemId}
@@ -668,7 +672,7 @@ export default function Production() {
                       </select>
                     </div>
 
-                    <div className="form-field">
+                    <div className="form-group-minimal">
                       <label>Cantidad</label>
                       <input
                         type="number"
@@ -738,19 +742,19 @@ export default function Production() {
                   <button
                     type="button"
                     onClick={addProductToOrder}
-                    className="button secondary"
+                    className="btn-minimal btn-secondary-minimal"
                     disabled={!currentProduct.itemId}
                   >
-                    ➕ Agregar Producto
+                    + Agregar Producto
                   </button>
                 </div>
               </div>
 
-              <div className="form-actions">
-                <button type="submit" className="button" disabled={orderForm.productos.length === 0}>
+              <div className="modal-actions">
+                <button type="submit" className="btn-minimal btn-primary-minimal" disabled={orderForm.productos.length === 0}>
                   Crear Orden
                 </button>
-                <button type="button" onClick={() => setShowNewOrderModal(false)} className="button secondary">
+                <button type="button" onClick={() => setShowNewOrderModal(false)} className="btn-minimal btn-secondary-minimal">
                   Cancelar
                 </button>
               </div>
