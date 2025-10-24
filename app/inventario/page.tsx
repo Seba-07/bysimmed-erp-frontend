@@ -31,6 +31,7 @@ interface Modelo {
   nombre: string
   componentes: { componenteId: string; cantidad: number }[]
   imagen?: string
+  pdfTecnico?: string
   stock: number
   precioVenta: number
   activo: boolean
@@ -680,6 +681,60 @@ export default function Inventario() {
                         }}
                       >+ Agregar</button>
                     </div>
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>PDF Técnico</label>
+                    {formData._id && formData.pdfTecnico && (
+                      <div style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ flex: 1 }}>📄 PDF técnico subido</span>
+                        <a
+                          href={`${API_URL}/api/inventario/modelos/${formData._id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-minimal btn-secondary-minimal"
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
+                        >
+                          Ver PDF
+                        </a>
+                      </div>
+                    )}
+                    {formData._id ? (
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+
+                          const formDataUpload = new FormData()
+                          formDataUpload.append('pdf', file)
+
+                          try {
+                            const res = await fetch(`${API_URL}/api/inventario/modelos/${formData._id}/upload-pdf`, {
+                              method: 'POST',
+                              body: formDataUpload
+                            })
+
+                            if (res.ok) {
+                              const data = await res.json()
+                              setFormData({ ...formData, pdfTecnico: data.pdfTecnico })
+                              alert('PDF técnico subido correctamente')
+                              await loadAllData()
+                            } else {
+                              const error = await res.json()
+                              alert(error.message || 'Error al subir PDF')
+                            }
+                          } catch (error) {
+                            alert('Error al subir PDF')
+                          }
+                        }}
+                      />
+                    ) : (
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                        Guarda el modelo primero para poder subir el PDF técnico
+                      </p>
+                    )}
                   </div>
                 </>
               )}

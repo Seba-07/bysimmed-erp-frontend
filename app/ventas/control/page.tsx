@@ -56,6 +56,7 @@ interface Cotizacion {
   monto?: number
   notas?: string
   condicionesComerciales?: string
+  pdfPath?: string
 }
 
 interface OrdenCompra {
@@ -263,6 +264,26 @@ export default function ControlVentas() {
     }
   }
 
+  const generarPDF = async (cotizacionId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacionId}/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (res.ok) {
+        loadData()
+        alert('PDF generado exitosamente')
+      } else {
+        const error = await res.json()
+        alert(`Error: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Error al generar PDF')
+    }
+  }
+
   const calcularDiasCiclo = (cot: Cotizacion, oc?: OrdenCompra) => {
     if (!cot.fechaSolicitud) return null
     const inicio = new Date(cot.fechaSolicitud)
@@ -383,6 +404,25 @@ export default function ControlVentas() {
                         >
                           🔄
                         </button>
+                        {cot.pdfPath ? (
+                          <a
+                            href={`${API_URL}/api/ventas/cotizaciones/${cot._id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-icon-minimal"
+                            title="Ver PDF"
+                          >
+                            📄
+                          </a>
+                        ) : (
+                          <button
+                            className="btn-icon-minimal"
+                            onClick={() => generarPDF(cot._id)}
+                            title="Generar PDF"
+                          >
+                            📝
+                          </button>
+                        )}
                         <button
                           className="btn-icon-minimal danger"
                           onClick={() => handleDelete('cotizacion', cot._id)}
