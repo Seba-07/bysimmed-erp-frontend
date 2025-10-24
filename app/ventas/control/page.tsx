@@ -9,6 +9,21 @@ interface Cliente {
   activo: boolean
 }
 
+interface Modelo {
+  _id: string
+  nombre: string
+  precioUnitario: number
+  stock: number
+}
+
+interface ProductoCotizacion {
+  modeloId: string
+  nombreModelo: string
+  cantidad: number
+  precioUnitario: number
+  subtotal: number
+}
+
 interface Cotizacion {
   _id: string
   numero: string
@@ -20,6 +35,8 @@ interface Cotizacion {
   fechaEnvio?: string
   fechaAceptacion?: string
   estado: 'solicitada' | 'enviada' | 'aceptada' | 'rechazada'
+  productos?: ProductoCotizacion[]
+  moneda?: 'CLP' | 'USD'
   monto?: number
   notas?: string
 }
@@ -38,10 +55,12 @@ export default function ControlVentas() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [modelos, setModelos] = useState<Modelo[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'cotizacion' | 'orden'>('cotizacion')
   const [formData, setFormData] = useState<any>({})
   const [numeroGenerado, setNumeroGenerado] = useState<string>('')
+  const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoCotizacion[]>([])
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -51,10 +70,11 @@ export default function ControlVentas() {
 
   const loadData = async () => {
     try {
-      const [cotRes, ocRes, clientesRes] = await Promise.all([
+      const [cotRes, ocRes, clientesRes, modelosRes] = await Promise.all([
         fetch(`${API_URL}/api/ventas/cotizaciones`),
         fetch(`${API_URL}/api/ventas/ordenes-compra`),
-        fetch(`${API_URL}/api/ventas/clientes`)
+        fetch(`${API_URL}/api/ventas/clientes`),
+        fetch(`${API_URL}/api/inventory/models`)
       ])
 
       if (cotRes.ok) {
@@ -70,6 +90,11 @@ export default function ControlVentas() {
       if (clientesRes.ok) {
         const data = await clientesRes.json()
         setClientes(data.filter((c: Cliente) => c.activo))
+      }
+
+      if (modelosRes.ok) {
+        const data = await modelosRes.json()
+        setModelos(data)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -98,6 +123,7 @@ export default function ControlVentas() {
     setModalType(type)
     setFormData(data || {})
     setNumeroGenerado('')
+    setProductosSeleccionados(data?.productos || [])
     setShowModal(true)
   }
 
@@ -105,10 +131,17 @@ export default function ControlVentas() {
     setShowModal(false)
     setFormData({})
     setNumeroGenerado('')
+    setProductosSeleccionados([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validar productos para cotizaciones nuevas
+    if (modalType === 'cotizacion' && !formData._id && productosSeleccionados.length === 0) {
+      alert('Debes agregar al menos un producto a la cotización')
+      return
+    }
 
     const url = modalType === 'cotizacion'
       ? `${API_URL}/api/ventas/cotizaciones`
@@ -117,11 +150,24 @@ export default function ControlVentas() {
     const method = formData._id ? 'PUT' : 'POST'
     const endpoint = formData._id ? `${url}/${formData._id}` : url
 
+    // Calcular monto total de los productos
+    const montoTotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+
+    const dataToSend = modalType === 'cotizacion'
+      ? {
+          ...formData,
+          productos: productosSeleccionados,
+          monto: montoTotal,
+          estado: formData._id ? formData.estado : 'solicitada',
+          moneda: formData.moneda || 'CLP'
+        }
+      : formData
+
     try {
       const res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       })
 
       if (res.ok) {
@@ -148,16 +194,25 @@ export default function ControlVentas() {
     }
   }
 
-  const crearRecotizacion = (cotizacion: Cotizacion) => {
-    const numeroRecotizacion = (cotizacion.numeroRecotizacion || 0) + 1
-    const clienteId = typeof cotizacion.cliente === 'object' ? cotizacion.cliente._id : cotizacion.cliente
-    openModal('cotizacion', {
-      numero: cotizacion.numero,
-      numeroRecotizacion,
-      numeroSecuencial: cotizacion.numeroSecuencial,
-      cliente: clienteId,
-      estado: 'solicitada'
-    })
+  const crearRecotizacion = async (cotizacion: Cotizacion) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacion._id}/recotizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+
+      if (res.ok) {
+        loadData()
+        alert('Re-cotización creada exitosamente')
+      } else {
+        const error = await res.json()
+        alert(`Error: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error creating re-quotation:', error)
+      alert('Error al crear re-cotización')
+    }
   }
 
   const calcularDiasCiclo = (cot: Cotizacion, oc?: OrdenCompra) => {
@@ -260,7 +315,9 @@ export default function ControlVentas() {
                         {cot.estado}
                       </span>
                     </td>
-                    <td className="cell-number">{cot.monto ? `$${cot.monto.toLocaleString()}` : '-'}</td>
+                    <td className="cell-number">
+                      {cot.monto ? `${cot.moneda === 'USD' ? 'USD' : '$'} ${cot.monto.toLocaleString()}` : '-'}
+                    </td>
                     <td className="cell-number">{diasCiclo !== null ? `${diasCiclo} días` : '-'}</td>
                     <td>
                       <div className="table-actions">
@@ -421,43 +478,180 @@ export default function ControlVentas() {
                       required
                     />
                   </div>
+
+                  {/* Solo mostrar fechas en modo edición */}
+                  {formData._id && formData.fechaEnvio && (
+                    <div className="form-group-minimal">
+                      <label>Fecha Envío</label>
+                      <input
+                        type="date"
+                        value={formData.fechaEnvio || ''}
+                        readOnly
+                        style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Fecha automática al marcar como enviada
+                      </small>
+                    </div>
+                  )}
+
+                  {formData._id && formData.fechaAceptacion && (
+                    <div className="form-group-minimal">
+                      <label>Fecha Aceptación</label>
+                      <input
+                        type="date"
+                        value={formData.fechaAceptacion || ''}
+                        readOnly
+                        style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Fecha automática al marcar como aceptada
+                      </small>
+                    </div>
+                  )}
+
+                  {/* Solo mostrar estado en modo edición */}
+                  {formData._id && (
+                    <div className="form-group-minimal">
+                      <label>Estado *</label>
+                      <select
+                        value={formData.estado || 'solicitada'}
+                        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                        required
+                      >
+                        <option value="solicitada">Solicitada</option>
+                        <option value="enviada">Enviada</option>
+                        <option value="aceptada">Aceptada</option>
+                        <option value="rechazada">Rechazada</option>
+                      </select>
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Las fechas se actualizan automáticamente al cambiar el estado
+                      </small>
+                    </div>
+                  )}
+
+                  {/* Moneda y Monto */}
                   <div className="form-group-minimal">
-                    <label>Fecha Envío</label>
-                    <input
-                      type="date"
-                      value={formData.fechaEnvio || ''}
-                      onChange={(e) => setFormData({ ...formData, fechaEnvio: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group-minimal">
-                    <label>Fecha Aceptación</label>
-                    <input
-                      type="date"
-                      value={formData.fechaAceptacion || ''}
-                      onChange={(e) => setFormData({ ...formData, fechaAceptacion: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group-minimal">
-                    <label>Estado *</label>
+                    <label>Moneda *</label>
                     <select
-                      value={formData.estado || 'solicitada'}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                      value={formData.moneda || 'CLP'}
+                      onChange={(e) => setFormData({ ...formData, moneda: e.target.value })}
                       required
                     >
-                      <option value="solicitada">Solicitada</option>
-                      <option value="enviada">Enviada</option>
-                      <option value="aceptada">Aceptada</option>
-                      <option value="rechazada">Rechazada</option>
+                      <option value="CLP">Pesos Chilenos ($)</option>
+                      <option value="USD">Dólares (USD)</option>
                     </select>
                   </div>
+                  {/* Selector de Productos */}
                   <div className="form-group-minimal">
-                    <label>Monto</label>
-                    <input
-                      type="number"
-                      value={formData.monto || ''}
-                      onChange={(e) => setFormData({ ...formData, monto: parseFloat(e.target.value) })}
-                    />
+                    <label>Productos a Cotizar *</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <select
+                        id="modelo-selector"
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Selecciona un modelo</option>
+                        {modelos.map((modelo) => (
+                          <option key={modelo._id} value={modelo._id}>
+                            {modelo.nombre} - ${modelo.precioUnitario.toLocaleString()} (Stock: {modelo.stock})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        id="cantidad-input"
+                        placeholder="Cantidad"
+                        min="1"
+                        style={{ width: '100px' }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-minimal btn-primary-minimal"
+                        onClick={() => {
+                          const selector = document.getElementById('modelo-selector') as HTMLSelectElement
+                          const cantidadInput = document.getElementById('cantidad-input') as HTMLInputElement
+                          const modeloId = selector.value
+                          const cantidad = parseInt(cantidadInput.value)
+
+                          if (!modeloId || !cantidad || cantidad < 1) {
+                            alert('Selecciona un modelo y cantidad válida')
+                            return
+                          }
+
+                          const modelo = modelos.find(m => m._id === modeloId)
+                          if (!modelo) return
+
+                          const subtotal = modelo.precioUnitario * cantidad
+                          const nuevoProducto: ProductoCotizacion = {
+                            modeloId: modelo._id,
+                            nombreModelo: modelo.nombre,
+                            cantidad,
+                            precioUnitario: modelo.precioUnitario,
+                            subtotal
+                          }
+
+                          setProductosSeleccionados([...productosSeleccionados, nuevoProducto])
+                          selector.value = ''
+                          cantidadInput.value = ''
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Lista de productos seleccionados */}
+                    {productosSeleccionados.length > 0 && (
+                      <div style={{ marginTop: '1rem', border: '1px solid var(--border-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                        <table style={{ width: '100%', fontSize: '0.875rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+                              <th style={{ textAlign: 'left', padding: '0.5rem' }}>Producto</th>
+                              <th style={{ textAlign: 'center', padding: '0.5rem' }}>Cant.</th>
+                              <th style={{ textAlign: 'right', padding: '0.5rem' }}>Precio Unit.</th>
+                              <th style={{ textAlign: 'right', padding: '0.5rem' }}>Subtotal</th>
+                              <th style={{ padding: '0.5rem' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productosSeleccionados.map((prod, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid var(--border-tertiary)' }}>
+                                <td style={{ padding: '0.5rem' }}>{prod.nombreModelo}</td>
+                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>{prod.cantidad}</td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  {formData.moneda === 'USD' ? '$' : '$'}{prod.precioUnitario.toLocaleString()}
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  {formData.moneda === 'USD' ? '$' : '$'}{prod.subtotal.toLocaleString()}
+                                </td>
+                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProductosSeleccionados(productosSeleccionados.filter((_, i) => i !== idx))
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                                  >
+                                    🗑️
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr style={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Total:</td>
+                              <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                {formData.moneda === 'USD' ? '$' : '$'}
+                                {productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0).toLocaleString()}
+                              </td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
                   </div>
+
                   <div className="form-group-minimal">
                     <label>Notas</label>
                     <textarea
