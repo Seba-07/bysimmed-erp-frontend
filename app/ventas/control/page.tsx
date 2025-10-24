@@ -55,6 +55,7 @@ interface Cotizacion {
   moneda?: 'CLP' | 'USD'
   monto?: number
   notas?: string
+  condicionesComerciales?: string
 }
 
 interface OrdenCompra {
@@ -728,12 +729,48 @@ export default function ControlVentas() {
                                     </div>
                                   )}
                                 </td>
-                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>{prod.cantidad}</td>
-                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
-                                  {formData.moneda === 'USD' ? '$' : '$'}{prod.precioUnitario.toLocaleString()}
+                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                  <input
+                                    type="number"
+                                    value={prod.cantidad}
+                                    onChange={(e) => {
+                                      const newCantidad = parseInt(e.target.value) || 1
+                                      const updated = [...productosSeleccionados]
+                                      updated[idx] = {
+                                        ...prod,
+                                        cantidad: newCantidad,
+                                        subtotal: prod.precioUnitario * newCantidad
+                                      }
+                                      setProductosSeleccionados(updated)
+                                    }}
+                                    min="1"
+                                    style={{ width: '60px', textAlign: 'center', padding: '0.25rem' }}
+                                  />
                                 </td>
                                 <td style={{ textAlign: 'right', padding: '0.5rem' }}>
-                                  {formData.moneda === 'USD' ? '$' : '$'}{prod.subtotal.toLocaleString()}
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                                    <span>{formData.moneda === 'USD' ? 'USD' : '$'}</span>
+                                    <input
+                                      type="number"
+                                      value={prod.precioUnitario}
+                                      onChange={(e) => {
+                                        const newPrecio = parseFloat(e.target.value) || 0
+                                        const updated = [...productosSeleccionados]
+                                        updated[idx] = {
+                                          ...prod,
+                                          precioUnitario: newPrecio,
+                                          subtotal: newPrecio * prod.cantidad
+                                        }
+                                        setProductosSeleccionados(updated)
+                                      }}
+                                      min="0"
+                                      step="0.01"
+                                      style={{ width: '100px', textAlign: 'right', padding: '0.25rem' }}
+                                    />
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  {formData.moneda === 'USD' ? 'USD' : '$'}{prod.subtotal.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                                 <td style={{ textAlign: 'center', padding: '0.5rem' }}>
                                   <button
@@ -797,6 +834,17 @@ export default function ControlVentas() {
                     <textarea
                       value={formData.notas || ''}
                       onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Condiciones Comerciales</label>
+                    <textarea
+                      value={formData.condicionesComerciales || ''}
+                      onChange={(e) => setFormData({ ...formData, condicionesComerciales: e.target.value })}
+                      rows={4}
+                      placeholder="Ej: Pago 50% anticipo, 50% contra entrega. Plazo de entrega: 30 días..."
                     />
                   </div>
                 </>
