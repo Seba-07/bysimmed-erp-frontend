@@ -64,6 +64,7 @@ export default function Clientes() {
     }
 
     setError(null)
+    console.log('API_URL:', API_URL)
 
     try {
       const res = await fetch(`${API_URL}/api/ventas/clientes/generar-codigo`, {
