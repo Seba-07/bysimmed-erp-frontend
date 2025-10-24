@@ -46,6 +46,19 @@ export default function Inventario() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
+  // Helper function to format price display
+  const formatPrice = (value: number | string): string => {
+    const num = typeof value === 'string' ? parseFloat(value) : value
+    if (isNaN(num)) return ''
+    return num.toLocaleString('es-CL')
+  }
+
+  // Helper function to parse formatted price back to number
+  const parseFormattedPrice = (value: string): number => {
+    const cleaned = value.replace(/\./g, '').replace(/,/g, '.')
+    return parseFloat(cleaned) || 0
+  }
+
   useEffect(() => {
     loadData()
   }, [tab])
@@ -364,11 +377,12 @@ export default function Inventario() {
                     <label>Stock Actual *</label>
                     <input
                       type="number"
-                      value={formData.stock || 0}
-                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      value={formData.stock ?? ''}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       required
                       min="0"
                       step="0.01"
+                      placeholder="0"
                     />
                   </div>
 
@@ -376,24 +390,38 @@ export default function Inventario() {
                     <label>Stock Mínimo *</label>
                     <input
                       type="number"
-                      value={formData.stockMinimo || 0}
-                      onChange={(e) => setFormData({ ...formData, stockMinimo: parseFloat(e.target.value) })}
+                      value={formData.stockMinimo ?? ''}
+                      onChange={(e) => setFormData({ ...formData, stockMinimo: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       required
                       min="0"
                       step="0.01"
+                      placeholder="0"
                     />
                   </div>
 
                   <div className="form-group-minimal">
-                    <label>Precio de Compra *</label>
-                    <input
-                      type="number"
-                      value={formData.precioCompra || 0}
-                      onChange={(e) => setFormData({ ...formData, precioCompra: parseFloat(e.target.value) })}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
+                    <label>Precio de Compra (CLP) *</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'var(--text-secondary)',
+                        pointerEvents: 'none'
+                      }}>$</span>
+                      <input
+                        type="text"
+                        value={formData.precioCompra ? formatPrice(formData.precioCompra) : ''}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '')
+                          setFormData({ ...formData, precioCompra: value === '' ? '' : parseFloat(value) })
+                        }}
+                        required
+                        placeholder="0"
+                        style={{ paddingLeft: '28px' }}
+                      />
+                    </div>
                     <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                       Precio por unidad de compra
                     </small>
@@ -407,24 +435,38 @@ export default function Inventario() {
                     <label>Stock Actual *</label>
                     <input
                       type="number"
-                      value={formData.stock || 0}
-                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      value={formData.stock ?? ''}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       required
                       min="0"
                       step="1"
+                      placeholder="0"
                     />
                   </div>
 
                   <div className="form-group-minimal">
-                    <label>Precio de Venta *</label>
-                    <input
-                      type="number"
-                      value={formData.precioVenta || 0}
-                      onChange={(e) => setFormData({ ...formData, precioVenta: parseFloat(e.target.value) })}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
+                    <label>Precio de Venta (CLP) *</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'var(--text-secondary)',
+                        pointerEvents: 'none'
+                      }}>$</span>
+                      <input
+                        type="text"
+                        value={formData.precioVenta ? formatPrice(formData.precioVenta) : ''}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '')
+                          setFormData({ ...formData, precioVenta: value === '' ? '' : parseFloat(value) })
+                        }}
+                        required
+                        placeholder="0"
+                        style={{ paddingLeft: '28px' }}
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group-minimal">
@@ -443,24 +485,38 @@ export default function Inventario() {
                     <label>Stock Actual *</label>
                     <input
                       type="number"
-                      value={formData.stock || 0}
-                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      value={formData.stock ?? ''}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       required
                       min="0"
                       step="1"
+                      placeholder="0"
                     />
                   </div>
 
                   <div className="form-group-minimal">
-                    <label>Precio de Venta *</label>
-                    <input
-                      type="number"
-                      value={formData.precioVenta || 0}
-                      onChange={(e) => setFormData({ ...formData, precioVenta: parseFloat(e.target.value) })}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
+                    <label>Precio de Venta (CLP) *</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'var(--text-secondary)',
+                        pointerEvents: 'none'
+                      }}>$</span>
+                      <input
+                        type="text"
+                        value={formData.precioVenta ? formatPrice(formData.precioVenta) : ''}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '')
+                          setFormData({ ...formData, precioVenta: value === '' ? '' : parseFloat(value) })
+                        }}
+                        required
+                        placeholder="0"
+                        style={{ paddingLeft: '28px' }}
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group-minimal">
