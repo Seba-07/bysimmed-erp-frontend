@@ -2,9 +2,25 @@
 
 import { useState, useEffect } from 'react'
 
+interface Empresa {
+  _id: string
+  nombre: string
+  rut?: string
+  razonSocial?: string
+  giro?: string
+  direccion?: string
+  ciudad?: string
+  telefono?: string
+  email?: string
+  sitioWeb?: string
+  activo: boolean
+  notas?: string
+}
+
 interface Cliente {
   _id: string
   nombre: string
+  empresa?: string | Empresa
   rut?: string
   email?: string
   telefono?: string
@@ -16,8 +32,13 @@ interface Cliente {
 
 export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [showModal, setShowModal] = useState(false)
+  const [showEmpresaModal, setShowEmpresaModal] = useState(false)
   const [formData, setFormData] = useState<Partial<Cliente>>({
+    activo: true
+  })
+  const [empresaFormData, setEmpresaFormData] = useState<Partial<Empresa>>({
     activo: true
   })
   const [loading, setLoading] = useState(false)
@@ -27,6 +48,7 @@ export default function Clientes() {
 
   useEffect(() => {
     loadClientes()
+    loadEmpresas()
   }, [])
 
   const loadClientes = async () => {
@@ -38,6 +60,18 @@ export default function Clientes() {
       }
     } catch (error) {
       console.error('Error loading clientes:', error)
+    }
+  }
+
+  const loadEmpresas = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/empresas`)
+      if (res.ok) {
+        const data = await res.json()
+        setEmpresas(data)
+      }
+    } catch (error) {
+      console.error('Error loading empresas:', error)
     }
   }
 
@@ -139,16 +173,87 @@ export default function Clientes() {
     }
   }
 
+  // Funciones para gestionar Empresas
+  const openEmpresaModal = (empresa?: Empresa) => {
+    if (empresa) {
+      setEmpresaFormData(empresa)
+    } else {
+      setEmpresaFormData({ activo: true })
+    }
+    setShowEmpresaModal(true)
+    setError(null)
+  }
+
+  const closeEmpresaModal = () => {
+    setShowEmpresaModal(false)
+    setEmpresaFormData({ activo: true })
+    setError(null)
+  }
+
+  const handleEmpresaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const url = empresaFormData._id
+      ? `${API_URL}/api/ventas/empresas/${empresaFormData._id}`
+      : `${API_URL}/api/ventas/empresas`
+
+    const method = empresaFormData._id ? 'PUT' : 'POST'
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(empresaFormData)
+      })
+
+      if (res.ok) {
+        await loadEmpresas()
+        closeEmpresaModal()
+      } else {
+        const data = await res.json()
+        setError(data.message || 'Error al guardar empresa')
+      }
+    } catch (error: any) {
+      console.error('Error saving empresa:', error)
+      setError('Error de conexión: ' + (error.message || 'No se pudo conectar con el servidor'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEmpresaDelete = async (id: string) => {
+    if (!confirm('¿Eliminar esta empresa?')) return
+
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/empresas/${id}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) loadEmpresas()
+    } catch (error) {
+      console.error('Error deleting:', error)
+    }
+  }
+
   return (
     <div className="page-container">
       <div className="page-header-minimal">
         <h1>Clientes</h1>
-        <button
-          className="btn-minimal btn-primary-minimal"
-          onClick={() => openModal()}
-        >
-          + Nuevo Cliente
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            className="btn-minimal btn-secondary-minimal"
+            onClick={() => openEmpresaModal()}
+          >
+            🏢 Gestionar Empresas
+          </button>
+          <button
+            className="btn-minimal btn-primary-minimal"
+            onClick={() => openModal()}
+          >
+            + Nuevo Cliente
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -174,6 +279,7 @@ export default function Clientes() {
             <tr>
               <th>Código</th>
               <th>Nombre</th>
+              <th>Empresa</th>
               <th>RUT</th>
               <th>Email</th>
               <th>Teléfono</th>
@@ -184,7 +290,7 @@ export default function Clientes() {
           <tbody>
             {clientes.length === 0 ? (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={8}>
                   <div className="empty-state-minimal">
                     <p>No hay clientes registrados</p>
                   </div>
@@ -195,6 +301,11 @@ export default function Clientes() {
                 <tr key={cliente._id}>
                   <td className="cell-primary">{cliente.codigoCliente}</td>
                   <td className="cell-primary">{cliente.nombre}</td>
+                  <td className="cell-secondary">
+                    {typeof cliente.empresa === 'object' && cliente.empresa !== null
+                      ? cliente.empresa.nombre
+                      : '-'}
+                  </td>
                   <td className="cell-secondary">{cliente.rut || '-'}</td>
                   <td className="cell-secondary">{cliente.email || '-'}</td>
                   <td className="cell-secondary">{cliente.telefono || '-'}</td>
@@ -260,6 +371,35 @@ export default function Clientes() {
                   onBlur={!formData.codigoCliente && !formData._id ? generarCodigo : undefined}
                   required
                 />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Empresa</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    value={typeof formData.empresa === 'object' ? formData.empresa?._id : formData.empresa || ''}
+                    onChange={(e) => setFormData({ ...formData, empresa: e.target.value || undefined })}
+                    style={{ flex: 1 }}
+                  >
+                    <option value="">Sin empresa</option>
+                    {empresas.filter(e => e.activo).map(empresa => (
+                      <option key={empresa._id} value={empresa._id}>
+                        {empresa.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-minimal btn-secondary-minimal"
+                    onClick={() => {
+                      setShowModal(false)
+                      openEmpresaModal()
+                    }}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    + Nueva
+                  </button>
+                </div>
               </div>
 
               <div className="form-group-minimal">
@@ -367,6 +507,196 @@ export default function Clientes() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Empresas */}
+      {showEmpresaModal && (
+        <div className="modal-minimal" onClick={closeEmpresaModal}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header-minimal">
+              <h2>{empresaFormData._id ? 'Editar' : 'Nueva'} Empresa</h2>
+              <button className="modal-close-btn" onClick={closeEmpresaModal}>×</button>
+            </div>
+
+            <form onSubmit={handleEmpresaSubmit}>
+              {error && (
+                <div style={{
+                  padding: '1rem',
+                  backgroundColor: 'var(--danger-light)',
+                  color: 'var(--danger)',
+                  borderRadius: '4px',
+                  marginBottom: '1rem'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <div className="form-group-minimal">
+                <label>Nombre *</label>
+                <input
+                  type="text"
+                  value={empresaFormData.nombre || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, nombre: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>RUT</label>
+                <input
+                  type="text"
+                  value={empresaFormData.rut || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, rut: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Razón Social</label>
+                <input
+                  type="text"
+                  value={empresaFormData.razonSocial || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, razonSocial: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Giro</label>
+                <input
+                  type="text"
+                  value={empresaFormData.giro || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, giro: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Dirección</label>
+                <input
+                  type="text"
+                  value={empresaFormData.direccion || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, direccion: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Ciudad</label>
+                <input
+                  type="text"
+                  value={empresaFormData.ciudad || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, ciudad: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Teléfono</label>
+                <input
+                  type="tel"
+                  value={empresaFormData.telefono || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, telefono: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={empresaFormData.email || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, email: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Sitio Web</label>
+                <input
+                  type="url"
+                  value={empresaFormData.sitioWeb || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, sitioWeb: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label>Notas</label>
+                <textarea
+                  value={empresaFormData.notas || ''}
+                  onChange={(e) => setEmpresaFormData({ ...empresaFormData, notas: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="form-group-minimal">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={empresaFormData.activo !== false}
+                    onChange={(e) => setEmpresaFormData({ ...empresaFormData, activo: e.target.checked })}
+                  />
+                  Activo
+                </label>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-minimal btn-secondary-minimal"
+                  onClick={closeEmpresaModal}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-minimal btn-primary-minimal"
+                  disabled={loading}
+                >
+                  {loading ? 'Guardando...' : empresaFormData._id ? 'Actualizar' : 'Crear'}
+                </button>
+              </div>
+            </form>
+
+            {empresas.length > 0 && (
+              <>
+                <hr style={{ margin: '2rem 0', border: 'none', borderTop: '1px solid var(--border-secondary)' }} />
+                <h3 style={{ marginBottom: '1rem' }}>Empresas Registradas</h3>
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  {empresas.map(empresa => (
+                    <div key={empresa._id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem',
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderRadius: '4px',
+                      marginBottom: '0.5rem'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{empresa.nombre}</div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          {empresa.rut || 'Sin RUT'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          className="btn-icon-minimal"
+                          onClick={() => openEmpresaModal(empresa)}
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn-icon-minimal danger"
+                          onClick={() => handleEmpresaDelete(empresa._id)}
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
