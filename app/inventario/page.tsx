@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react'
 
-interface Modelo {
+interface Material {
   _id: string
   codigo: string
   nombre: string
-  descripcion?: string
-  imagen?: string
+  unidadCompra: string
+  unidadFabricacion: string
+  factorConversion: number
   stock: number
   stockMinimo: number
-  precioVenta: number
+  precioCompra: number
   activo: boolean
 }
 
@@ -18,22 +19,20 @@ interface Componente {
   _id: string
   codigo: string
   nombre: string
-  descripcion?: string
+  materiales: { materialId: string; cantidad: number }[]
   stock: number
-  stockMinimo: number
   precioVenta: number
   activo: boolean
 }
 
-interface Material {
+interface Modelo {
   _id: string
   codigo: string
   nombre: string
-  descripcion?: string
-  unidadMedida: string
+  componentes: { componenteId: string; cantidad: number }[]
+  imagen?: string
   stock: number
-  stockMinimo: number
-  precioUnitario: number
+  precioVenta: number
   activo: boolean
 }
 
@@ -69,8 +68,43 @@ export default function Inventario() {
     }
   }
 
-  const openModal = (item?: any) => {
-    setFormData(item || { activo: true })
+  const loadAllData = async () => {
+    try {
+      const [modelosRes, componentesRes, materialesRes] = await Promise.all([
+        fetch(`${API_URL}/api/inventario/modelos`),
+        fetch(`${API_URL}/api/inventario/componentes`),
+        fetch(`${API_URL}/api/inventario/materiales`)
+      ])
+
+      if (modelosRes.ok) setModelos(await modelosRes.json())
+      if (componentesRes.ok) setComponentes(await componentesRes.json())
+      if (materialesRes.ok) setMateriales(await materialesRes.json())
+    } catch (error) {
+      console.error('Error loading all data:', error)
+    }
+  }
+
+  const openModal = async (item?: any) => {
+    await loadAllData() // Load all data for selectors
+
+    if (item) {
+      setFormData(item)
+    } else {
+      // Get next codigo
+      const endpoint = tab === 'modelos' ? '/api/inventario/modelos/next-codigo'
+        : tab === 'componentes' ? '/api/inventario/componentes/next-codigo'
+        : '/api/inventario/materiales/next-codigo'
+
+      try {
+        const res = await fetch(`${API_URL}${endpoint}`)
+        if (res.ok) {
+          const data = await res.json()
+          setFormData({ activo: true, codigo: data.codigo })
+        }
+      } catch (error) {
+        setFormData({ activo: true })
+      }
+    }
     setShowModal(true)
   }
 
@@ -191,11 +225,14 @@ export default function Inventario() {
             <tr>
               <th>Código</th>
               <th>Nombre</th>
-              <th>Descripción</th>
-              {tab === 'materiales' && <th>Unidad</th>}
+              {tab === 'modelos' && <th>Componentes</th>}
+              {tab === 'componentes' && <th>Materiales</th>}
+              {tab === 'materiales' && <th>Unidad Compra</th>}
+              {tab === 'materiales' && <th>Unidad Fabr.</th>}
+              {tab === 'materiales' && <th>Conversión</th>}
               <th>Stock</th>
-              <th>Stock Mín.</th>
-              <th>{tab === 'materiales' ? 'Precio Unit.' : 'Precio Venta'}</th>
+              {tab === 'materiales' && <th>Stock Mín.</th>}
+              <th>{tab === 'materiales' ? 'Precio Compra' : 'Precio Venta'}</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -203,7 +240,7 @@ export default function Inventario() {
           <tbody>
             {currentData.length === 0 ? (
               <tr>
-                <td colSpan={tab === 'materiales' ? 9 : 8}>
+                <td colSpan={tab === 'materiales' ? 11 : 7}>
                   <div className="empty-state-minimal">
                     <p>No hay {tab} registrados</p>
                   </div>
@@ -214,13 +251,16 @@ export default function Inventario() {
                 <tr key={item._id}>
                   <td className="cell-primary">{item.codigo}</td>
                   <td className="cell-secondary">{item.nombre}</td>
-                  <td className="cell-secondary">{item.descripcion || '-'}</td>
-                  {tab === 'materiales' && <td>{item.unidadMedida}</td>}
-                  <td className="cell-number" style={{ color: item.stock <= item.stockMinimo ? 'var(--danger)' : 'inherit' }}>
+                  {tab === 'modelos' && <td className="cell-number">{item.componentes?.length || 0}</td>}
+                  {tab === 'componentes' && <td className="cell-number">{item.materiales?.length || 0}</td>}
+                  {tab === 'materiales' && <td>{item.unidadCompra}</td>}
+                  {tab === 'materiales' && <td>{item.unidadFabricacion}</td>}
+                  {tab === 'materiales' && <td className="cell-number">{item.factorConversion}</td>}
+                  <td className="cell-number" style={{ color: tab === 'materiales' && item.stock <= item.stockMinimo ? 'var(--danger)' : 'inherit' }}>
                     {item.stock}
                   </td>
-                  <td className="cell-number">{item.stockMinimo}</td>
-                  <td className="cell-number">${(tab === 'materiales' ? item.precioUnitario : item.precioVenta).toLocaleString()}</td>
+                  {tab === 'materiales' && <td className="cell-number">{item.stockMinimo}</td>}
+                  <td className="cell-number">${(tab === 'materiales' ? item.precioCompra : item.precioVenta).toLocaleString()}</td>
                   <td>
                     <span className={`badge-minimal ${item.activo ? 'badge-success' : 'badge-secondary'}`}>
                       {item.activo ? 'Activo' : 'Inactivo'}
@@ -242,7 +282,7 @@ export default function Inventario() {
       {/* Modal */}
       {showModal && (
         <div className="modal-minimal" onClick={closeModal}>
-          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content-minimal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
             <div className="modal-header-minimal">
               <h2>{formData._id ? 'Editar' : 'Nuevo'} {tab === 'modelos' ? 'Modelo' : tab === 'componentes' ? 'Componente' : 'Material'}</h2>
               <button className="modal-close-btn" onClick={closeModal}>×</button>
@@ -250,14 +290,16 @@ export default function Inventario() {
 
             <form onSubmit={handleSubmit}>
               <div className="form-group-minimal">
-                <label>Código *</label>
+                <label>Código</label>
                 <input
                   type="text"
                   value={formData.codigo || ''}
-                  onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
-                  required
-                  maxLength={10}
+                  readOnly
+                  style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
                 />
+                <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                  Generado automáticamente
+                </small>
               </div>
 
               <div className="form-group-minimal">
@@ -270,72 +312,166 @@ export default function Inventario() {
                 />
               </div>
 
-              <div className="form-group-minimal">
-                <label>Descripción</label>
-                <textarea
-                  value={formData.descripcion || ''}
-                  onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                />
-              </div>
-
               {tab === 'materiales' && (
-                <div className="form-group-minimal">
-                  <label>Unidad de Medida *</label>
-                  <select
-                    value={formData.unidadMedida || ''}
-                    onChange={(e) => setFormData({ ...formData, unidadMedida: e.target.value })}
-                    required
-                  >
-                    <option value="">Selecciona</option>
-                    <option value="unidad">Unidad</option>
-                    <option value="kg">Kilogramo (kg)</option>
-                    <option value="g">Gramo (g)</option>
-                    <option value="litro">Litro</option>
-                    <option value="ml">Mililitro (ml)</option>
-                    <option value="metro">Metro (m)</option>
-                    <option value="cm">Centímetro (cm)</option>
-                    <option value="mm">Milímetro (mm)</option>
-                  </select>
-                </div>
+                <>
+                  <div className="form-group-minimal">
+                    <label>Unidad de Compra *</label>
+                    <input
+                      type="text"
+                      value={formData.unidadCompra || ''}
+                      onChange={(e) => setFormData({ ...formData, unidadCompra: e.target.value })}
+                      required
+                      placeholder="Ej: Frasco 3kg, Caja 10 unidades, etc"
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Unidad de Fabricación *</label>
+                    <select
+                      value={formData.unidadFabricacion || ''}
+                      onChange={(e) => setFormData({ ...formData, unidadFabricacion: e.target.value })}
+                      required
+                    >
+                      <option value="">Selecciona</option>
+                      <option value="kg">Kilogramo (kg)</option>
+                      <option value="g">Gramo (g)</option>
+                      <option value="litro">Litro</option>
+                      <option value="ml">Mililitro (ml)</option>
+                      <option value="metro">Metro (m)</option>
+                      <option value="cm">Centímetro (cm)</option>
+                      <option value="mm">Milímetro (mm)</option>
+                      <option value="unidad">Unidad</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Factor de Conversión *</label>
+                    <input
+                      type="number"
+                      value={formData.factorConversion || ''}
+                      onChange={(e) => setFormData({ ...formData, factorConversion: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                      placeholder="Unidades de fabricación por unidad de compra"
+                    />
+                    <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                      Ejemplo: Si compras un frasco de 3kg, el factor es 3000 (para gramos)
+                    </small>
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Stock Actual *</label>
+                    <input
+                      type="number"
+                      value={formData.stock || 0}
+                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Stock Mínimo *</label>
+                    <input
+                      type="number"
+                      value={formData.stockMinimo || 0}
+                      onChange={(e) => setFormData({ ...formData, stockMinimo: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Precio de Compra *</label>
+                    <input
+                      type="number"
+                      value={formData.precioCompra || 0}
+                      onChange={(e) => setFormData({ ...formData, precioCompra: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                    <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                      Precio por unidad de compra
+                    </small>
+                  </div>
+                </>
               )}
 
-              <div className="form-group-minimal">
-                <label>Stock *</label>
-                <input
-                  type="number"
-                  value={formData.stock || 0}
-                  onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
-                  required
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+              {tab === 'componentes' && (
+                <>
+                  <div className="form-group-minimal">
+                    <label>Stock Actual *</label>
+                    <input
+                      type="number"
+                      value={formData.stock || 0}
+                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="1"
+                    />
+                  </div>
 
-              <div className="form-group-minimal">
-                <label>Stock Mínimo</label>
-                <input
-                  type="number"
-                  value={formData.stockMinimo || 0}
-                  onChange={(e) => setFormData({ ...formData, stockMinimo: parseFloat(e.target.value) })}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+                  <div className="form-group-minimal">
+                    <label>Precio de Venta *</label>
+                    <input
+                      type="number"
+                      value={formData.precioVenta || 0}
+                      onChange={(e) => setFormData({ ...formData, precioVenta: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
 
-              <div className="form-group-minimal">
-                <label>{tab === 'materiales' ? 'Precio Unitario *' : 'Precio de Venta *'}</label>
-                <input
-                  type="number"
-                  value={tab === 'materiales' ? (formData.precioUnitario || 0) : (formData.precioVenta || 0)}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    [tab === 'materiales' ? 'precioUnitario' : 'precioVenta']: parseFloat(e.target.value)
-                  })}
-                  required
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+                  <div className="form-group-minimal">
+                    <label>Materiales</label>
+                    {/* Lista de materiales - simplified for now */}
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      La composición de materiales se configurará próximamente
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {tab === 'modelos' && (
+                <>
+                  <div className="form-group-minimal">
+                    <label>Stock Actual *</label>
+                    <input
+                      type="number"
+                      value={formData.stock || 0}
+                      onChange={(e) => setFormData({ ...formData, stock: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Precio de Venta *</label>
+                    <input
+                      type="number"
+                      value={formData.precioVenta || 0}
+                      onChange={(e) => setFormData({ ...formData, precioVenta: parseFloat(e.target.value) })}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Componentes</label>
+                    {/* Lista de componentes - simplified for now */}
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      La composición de componentes se configurará próximamente
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className="form-group-minimal">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -12,7 +12,12 @@ export default function Sidebar() {
 
   const menuItems = [
     { href: '/', icon: '🏠', label: 'Inicio' },
-    { href: '/inventario', icon: '📦', label: 'Inventario' },
+    {
+      section: 'Inventario',
+      items: [
+        { href: '/inventario', icon: '📦', label: 'Inventario' },
+      ]
+    },
     {
       section: 'Ventas',
       items: [
