@@ -313,12 +313,6 @@ export default function ControlVentas() {
         <h1>Control de Ventas</h1>
         <div className="header-actions-minimal">
           <button
-            className="btn-minimal btn-primary-minimal"
-            onClick={() => openModal('cotizacion')}
-          >
-            + Nueva Cotización
-          </button>
-          <button
             className="btn-minimal btn-secondary-minimal"
             onClick={() => openModal('orden')}
           >
@@ -334,7 +328,7 @@ export default function ControlVentas() {
           <div className="stat-value">{cotizaciones.filter(c => c.estado !== 'rechazada').length}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Aceptadas</div>
+          <div className="stat-label">Cotizaciones Aceptadas</div>
           <div className="stat-value">{cotizaciones.filter(c => c.estado === 'aceptada').length}</div>
         </div>
         <div className="stat-card">
@@ -347,128 +341,6 @@ export default function ControlVentas() {
             ${ordenesCompra.filter(o => o.estado === 'pagada').reduce((sum, o) => sum + o.monto, 0).toLocaleString()}
           </div>
         </div>
-      </div>
-
-      {/* Cotizaciones Table */}
-      <h2 style={{ color: '#60a5fa', marginBottom: '1rem', fontSize: '1.25rem' }}>📋 Cotizaciones</h2>
-      <div className="table-minimal-container">
-        <table className="table-minimal">
-          <thead>
-            <tr>
-              <th>N° Cotización</th>
-              <th>Cliente</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Monto</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cotizaciones.length === 0 ? (
-              <tr>
-                <td colSpan={6}>
-                  <div className="empty-state-minimal">
-                    <p>No hay cotizaciones registradas</p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              cotizaciones.map((cot) => {
-                return (
-                  <tr key={cot._id}>
-                    <td className="cell-primary">
-                      {cot.numero}
-                    </td>
-                    <td>{cot.clienteNombre || (typeof cot.cliente === 'object' ? cot.cliente.nombre : cot.cliente)}</td>
-                    <td className="cell-date">{cot.fechaSolicitud ? new Date(cot.fechaSolicitud).toLocaleDateString('es-CL') : '-'}</td>
-                    <td>
-                      <span className={`badge-minimal ${
-                        cot.estado === 'aceptada' ? 'badge-success' :
-                        cot.estado === 'enviada' ? 'badge-info' :
-                        cot.estado === 'rechazada' ? 'badge-danger' :
-                        'badge-neutral'
-                      }`}>
-                        {cot.estado}
-                      </span>
-                    </td>
-                    <td className="cell-number">
-                      {cot.monto ? `${cot.moneda === 'USD' ? 'USD' : '$'} ${cot.monto.toLocaleString('es-CL')}` : '-'}
-                    </td>
-                    <td>
-                      <div className="table-actions" style={{ gap: '0.75rem' }}>
-                        {/* Mostrar botón Editar solo si NO está enviada */}
-                        {cot.estado === 'solicitada' && (
-                          <button
-                            className="btn-icon-minimal"
-                            onClick={() => openModal('cotizacion', cot)}
-                            title="Editar"
-                            style={{ fontSize: '1.5rem' }}
-                          >
-                            ✏️
-                          </button>
-                        )}
-
-                        {/* Mostrar botón Enviar solo si está en estado solicitada */}
-                        {cot.estado === 'solicitada' && (
-                          <button
-                            className="btn-icon-minimal"
-                            onClick={() => enviarCotizacion(cot._id)}
-                            title="Enviar Cotización"
-                            style={{ fontSize: '1.5rem' }}
-                          >
-                            📧
-                          </button>
-                        )}
-
-                        {/* Mostrar botón Re-cotizar solo si ya está enviada */}
-                        {cot.estado === 'enviada' && (
-                          <button
-                            className="btn-icon-minimal"
-                            onClick={() => openModal('cotizacion', cot)}
-                            title="Re-cotizar"
-                            style={{ fontSize: '1.5rem' }}
-                          >
-                            🔄
-                          </button>
-                        )}
-
-                        {cot.pdfPath ? (
-                          <a
-                            href={`${API_URL}/api/ventas/cotizaciones/${cot._id}/pdf`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn-icon-minimal"
-                            title="Ver PDF"
-                            style={{ fontSize: '1.5rem' }}
-                          >
-                            📄
-                          </a>
-                        ) : (
-                          <button
-                            className="btn-icon-minimal"
-                            onClick={() => generarPDF(cot._id)}
-                            title="Generar PDF"
-                            style={{ fontSize: '1.5rem' }}
-                          >
-                            📝
-                          </button>
-                        )}
-                        <button
-                          className="btn-icon-minimal danger"
-                          onClick={() => handleDelete('cotizacion', cot._id)}
-                          title="Eliminar"
-                          style={{ fontSize: '1.5rem' }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
       </div>
 
       {/* Órdenes de Compra Table */}
