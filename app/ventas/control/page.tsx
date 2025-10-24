@@ -2,17 +2,61 @@
 
 import { useState, useEffect } from 'react'
 
+interface Cliente {
+  _id: string
+  nombre: string
+  codigoCliente: string
+  activo: boolean
+}
+
+interface Modelo {
+  _id: string
+  codigo: string
+  nombre: string
+  descripcion?: string
+  precioVenta: number
+  stock: number
+  activo: boolean
+}
+
+interface Componente {
+  _id: string
+  codigo: string
+  nombre: string
+  descripcion?: string
+  precioVenta: number
+  stock: number
+  activo: boolean
+}
+
+interface ProductoCotizacion {
+  tipo: 'modelo' | 'componente'
+  itemId: string
+  codigo: string
+  nombre: string
+  descripcion?: string
+  cantidad: number
+  precioUnitario: number
+  subtotal: number
+}
+
 interface Cotizacion {
   _id: string
   numero: string
+  numeroSecuencial: number
   numeroRecotizacion?: number
-  cliente: string
+  cliente: Cliente | string
+  clienteNombre: string
   fechaSolicitud: string
   fechaEnvio?: string
   fechaAceptacion?: string
   estado: 'solicitada' | 'enviada' | 'aceptada' | 'rechazada'
+  productos?: ProductoCotizacion[]
+  moneda?: 'CLP' | 'USD'
   monto?: number
   notas?: string
+  condicionesComerciales?: string
+  pdfPath?: string
 }
 
 interface OrdenCompra {
@@ -28,9 +72,16 @@ interface OrdenCompra {
 export default function ControlVentas() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [modelos, setModelos] = useState<Modelo[]>([])
+  const [componentes, setComponentes] = useState<Componente[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'cotizacion' | 'orden'>('cotizacion')
   const [formData, setFormData] = useState<any>({})
+  const [numeroGenerado, setNumeroGenerado] = useState<string>('')
+  const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoCotizacion[]>([])
+  const [tasaCambio, setTasaCambio] = useState<number>(900)
+  const [tipoProductoFiltro, setTipoProductoFiltro] = useState<'modelo' | 'componente'>('modelo')
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -40,9 +91,13 @@ export default function ControlVentas() {
 
   const loadData = async () => {
     try {
-      const [cotRes, ocRes] = await Promise.all([
+      const [cotRes, ocRes, clientesRes, modelosRes, componentesRes, currencyRes] = await Promise.all([
         fetch(`${API_URL}/api/ventas/cotizaciones`),
-        fetch(`${API_URL}/api/ventas/ordenes-compra`)
+        fetch(`${API_URL}/api/ventas/ordenes-compra`),
+        fetch(`${API_URL}/api/ventas/clientes`),
+        fetch(`${API_URL}/api/inventario/modelos`),
+        fetch(`${API_URL}/api/inventario/componentes`),
+        fetch(`${API_URL}/api/currency/usd-clp`)
       ])
 
       if (cotRes.ok) {
@@ -54,24 +109,80 @@ export default function ControlVentas() {
         const data = await ocRes.json()
         setOrdenesCompra(data)
       }
+
+      if (clientesRes.ok) {
+        const data = await clientesRes.json()
+        setClientes(data.filter((c: Cliente) => c.activo))
+      }
+
+      if (modelosRes.ok) {
+        const data = await modelosRes.json()
+        setModelos(data.filter((m: Modelo) => m.activo))
+      }
+
+      if (componentesRes.ok) {
+        const data = await componentesRes.json()
+        setComponentes(data.filter((c: Componente) => c.activo))
+      }
+
+      if (currencyRes.ok) {
+        const data = await currencyRes.json()
+        setTasaCambio(data.rate)
+      }
     } catch (error) {
       console.error('Error loading data:', error)
     }
   }
 
+  const loadNumeroForCliente = async (clienteId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/next-numero/${clienteId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setNumeroGenerado(data.numero)
+        setFormData({
+          ...formData,
+          numero: data.numero,
+          numeroSecuencial: data.numeroSecuencial,
+          cliente: clienteId
+        })
+      }
+    } catch (error) {
+      console.error('Error loading numero:', error)
+    }
+  }
+
   const openModal = (type: 'cotizacion' | 'orden', data?: any) => {
     setModalType(type)
-    setFormData(data || {})
+
+    // Si es una nueva cotización, auto-llenar la fecha de solicitud con la fecha actual
+    if (type === 'cotizacion' && !data) {
+      const today = new Date().toISOString().split('T')[0]
+      setFormData({ fechaSolicitud: today, moneda: 'CLP' })
+    } else {
+      setFormData(data || {})
+    }
+
+    setNumeroGenerado('')
+    setProductosSeleccionados(data?.productos || [])
     setShowModal(true)
   }
 
   const closeModal = () => {
     setShowModal(false)
     setFormData({})
+    setNumeroGenerado('')
+    setProductosSeleccionados([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validar productos para cotizaciones nuevas
+    if (modalType === 'cotizacion' && !formData._id && productosSeleccionados.length === 0) {
+      alert('Debes agregar al menos un producto a la cotización')
+      return
+    }
 
     const url = modalType === 'cotizacion'
       ? `${API_URL}/api/ventas/cotizaciones`
@@ -80,11 +191,32 @@ export default function ControlVentas() {
     const method = formData._id ? 'PUT' : 'POST'
     const endpoint = formData._id ? `${url}/${formData._id}` : url
 
+    // Calcular subtotal de los productos
+    const subtotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+
+    // Calcular IVA solo si es CLP
+    const moneda = formData.moneda || 'CLP'
+    const iva = moneda === 'CLP' ? subtotal * 0.19 : 0
+    const montoTotal = subtotal + iva
+
+    const dataToSend = modalType === 'cotizacion'
+      ? {
+          ...formData,
+          productos: productosSeleccionados,
+          tasaCambio: moneda === 'USD' ? tasaCambio : undefined,
+          subtotal,
+          iva,
+          monto: montoTotal,
+          estado: formData._id ? formData.estado : 'solicitada',
+          moneda
+        }
+      : formData
+
     try {
       const res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       })
 
       if (res.ok) {
@@ -111,14 +243,45 @@ export default function ControlVentas() {
     }
   }
 
-  const crearRecotizacion = (cotizacion: Cotizacion) => {
-    const numeroRecotizacion = (cotizacion.numeroRecotizacion || 0) + 1
-    openModal('cotizacion', {
-      numero: cotizacion.numero,
-      numeroRecotizacion,
-      cliente: cotizacion.cliente,
-      estado: 'solicitada'
-    })
+  const crearRecotizacion = async (cotizacion: Cotizacion) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacion._id}/recotizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+
+      if (res.ok) {
+        loadData()
+        alert('Re-cotización creada exitosamente')
+      } else {
+        const error = await res.json()
+        alert(`Error: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error creating re-quotation:', error)
+      alert('Error al crear re-cotización')
+    }
+  }
+
+  const generarPDF = async (cotizacionId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacionId}/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (res.ok) {
+        loadData()
+        alert('PDF generado exitosamente')
+      } else {
+        const error = await res.json()
+        alert(`Error: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Error al generar PDF')
+    }
   }
 
   const calcularDiasCiclo = (cot: Cotizacion, oc?: OrdenCompra) => {
@@ -207,7 +370,7 @@ export default function ControlVentas() {
                     <td className="cell-primary">
                       {cot.numero}{cot.numeroRecotizacion ? `.${cot.numeroRecotizacion}` : ''}
                     </td>
-                    <td>{cot.cliente}</td>
+                    <td>{cot.clienteNombre || (typeof cot.cliente === 'object' ? cot.cliente.nombre : cot.cliente)}</td>
                     <td className="cell-date">{cot.fechaSolicitud ? new Date(cot.fechaSolicitud).toLocaleDateString() : '-'}</td>
                     <td className="cell-date">{cot.fechaEnvio ? new Date(cot.fechaEnvio).toLocaleDateString() : '-'}</td>
                     <td className="cell-date">{cot.fechaAceptacion ? new Date(cot.fechaAceptacion).toLocaleDateString() : '-'}</td>
@@ -221,7 +384,9 @@ export default function ControlVentas() {
                         {cot.estado}
                       </span>
                     </td>
-                    <td className="cell-number">{cot.monto ? `$${cot.monto.toLocaleString()}` : '-'}</td>
+                    <td className="cell-number">
+                      {cot.monto ? `${cot.moneda === 'USD' ? 'USD' : '$'} ${cot.monto.toLocaleString()}` : '-'}
+                    </td>
                     <td className="cell-number">{diasCiclo !== null ? `${diasCiclo} días` : '-'}</td>
                     <td>
                       <div className="table-actions">
@@ -239,6 +404,25 @@ export default function ControlVentas() {
                         >
                           🔄
                         </button>
+                        {cot.pdfPath ? (
+                          <a
+                            href={`${API_URL}/api/ventas/cotizaciones/${cot._id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-icon-minimal"
+                            title="Ver PDF"
+                          >
+                            📄
+                          </a>
+                        ) : (
+                          <button
+                            className="btn-icon-minimal"
+                            onClick={() => generarPDF(cot._id)}
+                            title="Generar PDF"
+                          >
+                            📝
+                          </button>
+                        )}
                         <button
                           className="btn-icon-minimal danger"
                           onClick={() => handleDelete('cotizacion', cot._id)}
@@ -333,22 +517,45 @@ export default function ControlVentas() {
               {modalType === 'cotizacion' ? (
                 <>
                   <div className="form-group-minimal">
-                    <label>N° Cotización *</label>
-                    <input
-                      type="text"
-                      value={formData.numero || ''}
-                      onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                    <label>Cliente *</label>
+                    <select
+                      value={typeof formData.cliente === 'object' ? formData.cliente._id : formData.cliente || ''}
+                      onChange={(e) => {
+                        const clienteId = e.target.value
+                        if (clienteId && !formData._id) {
+                          loadNumeroForCliente(clienteId)
+                        } else {
+                          setFormData({ ...formData, cliente: clienteId })
+                        }
+                      }}
                       required
-                    />
+                      disabled={!!formData._id}
+                    >
+                      <option value="">Selecciona un cliente</option>
+                      {clientes.map((cliente) => (
+                        <option key={cliente._id} value={cliente._id}>
+                          {cliente.nombre} ({cliente.codigoCliente})
+                        </option>
+                      ))}
+                    </select>
+                    {formData._id && (
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        El cliente no se puede cambiar al editar
+                      </small>
+                    )}
                   </div>
                   <div className="form-group-minimal">
-                    <label>Cliente *</label>
+                    <label>N° Cotización</label>
                     <input
                       type="text"
-                      value={formData.cliente || ''}
-                      onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
-                      required
+                      value={formData.numero || numeroGenerado || ''}
+                      readOnly
+                      style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      placeholder="Selecciona un cliente primero"
                     />
+                    <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                      El número se genera automáticamente según el cliente
+                    </small>
                   </div>
                   <div className="form-group-minimal">
                     <label>Fecha Solicitud *</label>
@@ -359,48 +566,325 @@ export default function ControlVentas() {
                       required
                     />
                   </div>
+
+                  {/* Solo mostrar fechas en modo edición */}
+                  {formData._id && formData.fechaEnvio && (
+                    <div className="form-group-minimal">
+                      <label>Fecha Envío</label>
+                      <input
+                        type="date"
+                        value={formData.fechaEnvio || ''}
+                        readOnly
+                        style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Fecha automática al marcar como enviada
+                      </small>
+                    </div>
+                  )}
+
+                  {formData._id && formData.fechaAceptacion && (
+                    <div className="form-group-minimal">
+                      <label>Fecha Aceptación</label>
+                      <input
+                        type="date"
+                        value={formData.fechaAceptacion || ''}
+                        readOnly
+                        style={{ backgroundColor: 'var(--bg-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Fecha automática al marcar como aceptada
+                      </small>
+                    </div>
+                  )}
+
+                  {/* Solo mostrar estado en modo edición */}
+                  {formData._id && (
+                    <div className="form-group-minimal">
+                      <label>Estado *</label>
+                      <select
+                        value={formData.estado || 'solicitada'}
+                        onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                        required
+                      >
+                        <option value="solicitada">Solicitada</option>
+                        <option value="enviada">Enviada</option>
+                        <option value="aceptada">Aceptada</option>
+                        <option value="rechazada">Rechazada</option>
+                      </select>
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Las fechas se actualizan automáticamente al cambiar el estado
+                      </small>
+                    </div>
+                  )}
+
+                  {/* Moneda y Monto */}
                   <div className="form-group-minimal">
-                    <label>Fecha Envío</label>
-                    <input
-                      type="date"
-                      value={formData.fechaEnvio || ''}
-                      onChange={(e) => setFormData({ ...formData, fechaEnvio: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group-minimal">
-                    <label>Fecha Aceptación</label>
-                    <input
-                      type="date"
-                      value={formData.fechaAceptacion || ''}
-                      onChange={(e) => setFormData({ ...formData, fechaAceptacion: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group-minimal">
-                    <label>Estado *</label>
+                    <label>Moneda *</label>
                     <select
-                      value={formData.estado || 'solicitada'}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                      value={formData.moneda || 'CLP'}
+                      onChange={(e) => {
+                        const nuevaMoneda = e.target.value
+                        const monedaAnterior = formData.moneda || 'CLP'
+
+                        // Convertir precios de productos ya agregados
+                        if (productosSeleccionados.length > 0 && nuevaMoneda !== monedaAnterior) {
+                          const productosConvertidos = productosSeleccionados.map(prod => {
+                            let nuevoPrecio = prod.precioUnitario
+
+                            // De CLP a USD
+                            if (monedaAnterior === 'CLP' && nuevaMoneda === 'USD') {
+                              nuevoPrecio = prod.precioUnitario / tasaCambio
+                            }
+                            // De USD a CLP
+                            else if (monedaAnterior === 'USD' && nuevaMoneda === 'CLP') {
+                              nuevoPrecio = prod.precioUnitario * tasaCambio
+                            }
+
+                            return {
+                              ...prod,
+                              precioUnitario: nuevoPrecio,
+                              subtotal: nuevoPrecio * prod.cantidad
+                            }
+                          })
+
+                          setProductosSeleccionados(productosConvertidos)
+                        }
+
+                        setFormData({ ...formData, moneda: nuevaMoneda })
+                      }}
                       required
                     >
-                      <option value="solicitada">Solicitada</option>
-                      <option value="enviada">Enviada</option>
-                      <option value="aceptada">Aceptada</option>
-                      <option value="rechazada">Rechazada</option>
+                      <option value="CLP">Pesos Chilenos ($)</option>
+                      <option value="USD">Dólares (USD)</option>
                     </select>
+                    {formData.moneda === 'USD' && (
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Tasa de cambio: ${tasaCambio.toLocaleString()} CLP/USD
+                      </small>
+                    )}
                   </div>
+                  {/* Selector de Productos del Inventario */}
                   <div className="form-group-minimal">
-                    <label>Monto</label>
-                    <input
-                      type="number"
-                      value={formData.monto || ''}
-                      onChange={(e) => setFormData({ ...formData, monto: parseFloat(e.target.value) })}
-                    />
+                    <label>Productos a Cotizar *</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 2fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
+                      <select
+                        id="producto-tipo"
+                        value={tipoProductoFiltro}
+                        onChange={(e) => setTipoProductoFiltro(e.target.value as 'modelo' | 'componente')}
+                      >
+                        <option value="modelo">Modelo</option>
+                        <option value="componente">Componente</option>
+                      </select>
+                      <select id="producto-selector">
+                        <option value="">Selecciona un producto</option>
+                        {tipoProductoFiltro === 'modelo' ? (
+                          modelos.map(m => (
+                            <option key={`modelo-${m._id}`} value={`modelo-${m._id}`}>
+                              {m.codigo} - {m.nombre} (${m.precioVenta.toLocaleString()})
+                            </option>
+                          ))
+                        ) : (
+                          componentes.map(c => (
+                            <option key={`componente-${c._id}`} value={`componente-${c._id}`}>
+                              {c.codigo} - {c.nombre} (${c.precioVenta.toLocaleString()})
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <input
+                        type="number"
+                        id="producto-cantidad"
+                        placeholder="Cantidad"
+                        min="1"
+                        defaultValue="1"
+                      />
+                      <button
+                        type="button"
+                        className="btn-minimal btn-primary-minimal"
+                        onClick={() => {
+                          const selectorEl = document.getElementById('producto-selector') as HTMLSelectElement
+                          const cantidadEl = document.getElementById('producto-cantidad') as HTMLInputElement
+                          const selectedValue = selectorEl.value
+                          const cantidad = parseInt(cantidadEl.value)
+
+                          if (!selectedValue || !cantidad || cantidad < 1) {
+                            alert('Selecciona un producto y cantidad válida')
+                            return
+                          }
+
+                          const [tipo, id] = selectedValue.split('-')
+                          const item = tipo === 'modelo'
+                            ? modelos.find(m => m._id === id)
+                            : componentes.find(c => c._id === id)
+
+                          if (!item) return
+
+                          // Convertir precio si la moneda es USD
+                          const precioEnMoneda = formData.moneda === 'USD'
+                            ? item.precioVenta / tasaCambio
+                            : item.precioVenta
+
+                          const nuevoProducto: ProductoCotizacion = {
+                            tipo: tipo as 'modelo' | 'componente',
+                            itemId: id,
+                            codigo: item.codigo,
+                            nombre: item.nombre,
+                            descripcion: item.descripcion,
+                            cantidad,
+                            precioUnitario: precioEnMoneda,
+                            subtotal: precioEnMoneda * cantidad
+                          }
+
+                          setProductosSeleccionados([...productosSeleccionados, nuevoProducto])
+                          selectorEl.value = ''
+                          cantidadEl.value = '1'
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Lista de productos seleccionados */}
+                    {productosSeleccionados.length > 0 && (
+                      <div style={{ marginTop: '1rem', border: '1px solid var(--border-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                        <table style={{ width: '100%', fontSize: '0.875rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+                              <th style={{ textAlign: 'left', padding: '0.5rem' }}>Producto</th>
+                              <th style={{ textAlign: 'center', padding: '0.5rem' }}>Cant.</th>
+                              <th style={{ textAlign: 'right', padding: '0.5rem' }}>Precio Unit.</th>
+                              <th style={{ textAlign: 'right', padding: '0.5rem' }}>Subtotal</th>
+                              <th style={{ padding: '0.5rem' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productosSeleccionados.map((prod, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid var(--border-tertiary)' }}>
+                                <td style={{ padding: '0.5rem' }}>
+                                  <div>{prod.nombre}</div>
+                                  {prod.descripcion && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                      {prod.descripcion}
+                                    </div>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                  <input
+                                    type="number"
+                                    value={prod.cantidad}
+                                    onChange={(e) => {
+                                      const newCantidad = parseInt(e.target.value) || 1
+                                      const updated = [...productosSeleccionados]
+                                      updated[idx] = {
+                                        ...prod,
+                                        cantidad: newCantidad,
+                                        subtotal: prod.precioUnitario * newCantidad
+                                      }
+                                      setProductosSeleccionados(updated)
+                                    }}
+                                    min="1"
+                                    style={{ width: '60px', textAlign: 'center', padding: '0.25rem' }}
+                                  />
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                                    <span>{formData.moneda === 'USD' ? 'USD' : '$'}</span>
+                                    <input
+                                      type="number"
+                                      value={prod.precioUnitario}
+                                      onChange={(e) => {
+                                        const newPrecio = parseFloat(e.target.value) || 0
+                                        const updated = [...productosSeleccionados]
+                                        updated[idx] = {
+                                          ...prod,
+                                          precioUnitario: newPrecio,
+                                          subtotal: newPrecio * prod.cantidad
+                                        }
+                                        setProductosSeleccionados(updated)
+                                      }}
+                                      min="0"
+                                      step="0.01"
+                                      style={{ width: '100px', textAlign: 'right', padding: '0.25rem' }}
+                                    />
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  {formData.moneda === 'USD' ? 'USD' : '$'}{prod.subtotal.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </td>
+                                <td style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProductosSeleccionados(productosSeleccionados.filter((_, i) => i !== idx))
+                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                                  >
+                                    🗑️
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Subtotal:</td>
+                              <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                {formData.moneda === 'USD' ? 'USD' : '$'}
+                                {productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0).toLocaleString()}
+                              </td>
+                              <td></td>
+                            </tr>
+                            {formData.moneda === 'CLP' && (
+                              <tr>
+                                <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>IVA (19%):</td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  ${(productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0) * 0.19).toLocaleString()}
+                                </td>
+                                <td></td>
+                              </tr>
+                            )}
+                            <tr style={{ fontWeight: 'bold', fontSize: '1rem', borderTop: '2px solid var(--border-secondary)' }}>
+                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Total:</td>
+                              <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                {formData.moneda === 'USD' ? 'USD' : '$'}
+                                {(() => {
+                                  const subtotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+                                  const iva = formData.moneda === 'CLP' ? subtotal * 0.19 : 0
+                                  return (subtotal + iva).toLocaleString()
+                                })()}
+                              </td>
+                              <td></td>
+                            </tr>
+                            {formData.moneda === 'USD' && (
+                              <tr style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                <td colSpan={5} style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  Tasa de cambio: ${tasaCambio.toLocaleString()} CLP/USD
+                                </td>
+                              </tr>
+                            )}
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
                   </div>
+
                   <div className="form-group-minimal">
                     <label>Notas</label>
                     <textarea
                       value={formData.notas || ''}
                       onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group-minimal">
+                    <label>Condiciones Comerciales</label>
+                    <textarea
+                      value={formData.condicionesComerciales || ''}
+                      onChange={(e) => setFormData({ ...formData, condicionesComerciales: e.target.value })}
+                      rows={4}
+                      placeholder="Ej: Pago 50% anticipo, 50% contra entrega. Plazo de entrega: 30 días..."
                     />
                   </div>
                 </>
