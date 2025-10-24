@@ -101,7 +101,11 @@ export default function Inventario() {
     await loadAllData() // Load all data for selectors
 
     if (item) {
-      setFormData(item)
+      setFormData({
+        ...item,
+        materiales: item.materiales || [],
+        componentes: item.componentes || []
+      })
     } else {
       // Get next codigo
       const endpoint = tab === 'modelos' ? '/api/inventario/modelos/next-codigo'
@@ -112,10 +116,24 @@ export default function Inventario() {
         const res = await fetch(`${API_URL}${endpoint}`)
         if (res.ok) {
           const data = await res.json()
-          setFormData({ activo: true, codigo: data.codigo })
+          const baseData = { activo: true, codigo: data.codigo }
+          if (tab === 'componentes') {
+            setFormData({ ...baseData, materiales: [] })
+          } else if (tab === 'modelos') {
+            setFormData({ ...baseData, componentes: [] })
+          } else {
+            setFormData(baseData)
+          }
         }
       } catch (error) {
-        setFormData({ activo: true })
+        const baseData = { activo: true }
+        if (tab === 'componentes') {
+          setFormData({ ...baseData, materiales: [] })
+        } else if (tab === 'modelos') {
+          setFormData({ ...baseData, componentes: [] })
+        } else {
+          setFormData(baseData)
+        }
       }
     }
     setShowModal(true)
@@ -361,12 +379,12 @@ export default function Inventario() {
                     <label>Factor de Conversión *</label>
                     <input
                       type="number"
-                      value={formData.factorConversion || ''}
-                      onChange={(e) => setFormData({ ...formData, factorConversion: parseFloat(e.target.value) })}
+                      value={formData.factorConversion ?? ''}
+                      onChange={(e) => setFormData({ ...formData, factorConversion: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                       required
                       min="0"
                       step="0.01"
-                      placeholder="Unidades de fabricación por unidad de compra"
+                      placeholder="1"
                     />
                     <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                       Ejemplo: Si compras un frasco de 3kg, el factor es 3000 (para gramos)
@@ -470,11 +488,77 @@ export default function Inventario() {
                   </div>
 
                   <div className="form-group-minimal">
-                    <label>Materiales</label>
-                    {/* Lista de materiales - simplified for now */}
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      La composición de materiales se configurará próximamente
-                    </p>
+                    <label>Materiales que componen este componente</label>
+                    {formData.materiales && formData.materiales.length > 0 && (
+                      <div style={{ marginBottom: '1rem' }}>
+                        {formData.materiales.map((mat: any, idx: number) => {
+                          const material = materiales.find(m => m._id === mat.materialId)
+                          return (
+                            <div key={idx} style={{
+                              display: 'flex',
+                              gap: '0.5rem',
+                              alignItems: 'center',
+                              padding: '0.5rem',
+                              backgroundColor: 'var(--bg-secondary)',
+                              borderRadius: '4px',
+                              marginBottom: '0.5rem'
+                            }}>
+                              <span style={{ flex: 1 }}>{material?.nombre || 'Material desconocido'}</span>
+                              <span style={{ color: 'var(--text-secondary)' }}>{mat.cantidad} {material?.unidadFabricacion}</span>
+                              <button
+                                type="button"
+                                className="btn-icon-minimal danger"
+                                onClick={() => {
+                                  const newMateriales = formData.materiales.filter((_: any, i: number) => i !== idx)
+                                  setFormData({ ...formData, materiales: newMateriales })
+                                }}
+                              >×</button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <select
+                        id="materialSelect"
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Seleccionar material</option>
+                        {materiales.filter(m => m.activo).map(material => (
+                          <option key={material._id} value={material._id}>
+                            {material.nombre} ({material.unidadFabricacion})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        id="materialCantidad"
+                        placeholder="Cantidad"
+                        min="0"
+                        step="0.01"
+                        style={{ width: '120px' }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-minimal btn-secondary-minimal"
+                        onClick={() => {
+                          const select = document.getElementById('materialSelect') as HTMLSelectElement
+                          const input = document.getElementById('materialCantidad') as HTMLInputElement
+                          if (select.value && input.value) {
+                            const newMaterial = {
+                              materialId: select.value,
+                              cantidad: parseFloat(input.value)
+                            }
+                            setFormData({
+                              ...formData,
+                              materiales: [...(formData.materiales || []), newMaterial]
+                            })
+                            select.value = ''
+                            input.value = ''
+                          }
+                        }}
+                      >+ Agregar</button>
+                    </div>
                   </div>
                 </>
               )}
@@ -520,11 +604,77 @@ export default function Inventario() {
                   </div>
 
                   <div className="form-group-minimal">
-                    <label>Componentes</label>
-                    {/* Lista de componentes - simplified for now */}
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      La composición de componentes se configurará próximamente
-                    </p>
+                    <label>Componentes que forman este modelo</label>
+                    {formData.componentes && formData.componentes.length > 0 && (
+                      <div style={{ marginBottom: '1rem' }}>
+                        {formData.componentes.map((comp: any, idx: number) => {
+                          const componente = componentes.find(c => c._id === comp.componenteId)
+                          return (
+                            <div key={idx} style={{
+                              display: 'flex',
+                              gap: '0.5rem',
+                              alignItems: 'center',
+                              padding: '0.5rem',
+                              backgroundColor: 'var(--bg-secondary)',
+                              borderRadius: '4px',
+                              marginBottom: '0.5rem'
+                            }}>
+                              <span style={{ flex: 1 }}>{componente?.nombre || 'Componente desconocido'}</span>
+                              <span style={{ color: 'var(--text-secondary)' }}>{comp.cantidad} unidad(es)</span>
+                              <button
+                                type="button"
+                                className="btn-icon-minimal danger"
+                                onClick={() => {
+                                  const newComponentes = formData.componentes.filter((_: any, i: number) => i !== idx)
+                                  setFormData({ ...formData, componentes: newComponentes })
+                                }}
+                              >×</button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <select
+                        id="componenteSelect"
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Seleccionar componente</option>
+                        {componentes.filter(c => c.activo).map(componente => (
+                          <option key={componente._id} value={componente._id}>
+                            {componente.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        id="componenteCantidad"
+                        placeholder="Cantidad"
+                        min="1"
+                        step="1"
+                        style={{ width: '120px' }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-minimal btn-secondary-minimal"
+                        onClick={() => {
+                          const select = document.getElementById('componenteSelect') as HTMLSelectElement
+                          const input = document.getElementById('componenteCantidad') as HTMLInputElement
+                          if (select.value && input.value) {
+                            const newComponente = {
+                              componenteId: select.value,
+                              cantidad: parseInt(input.value)
+                            }
+                            setFormData({
+                              ...formData,
+                              componentes: [...(formData.componentes || []), newComponente]
+                            })
+                            select.value = ''
+                            input.value = ''
+                          }
+                        }}
+                      >+ Agregar</button>
+                    </div>
                   </div>
                 </>
               )}
