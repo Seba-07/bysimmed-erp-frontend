@@ -284,14 +284,19 @@ export default function Inventario() {
                   <td className="cell-secondary">{item.nombre}</td>
                   {tab === 'modelos' && <td className="cell-number">{item.componentes?.length || 0}</td>}
                   {tab === 'componentes' && <td className="cell-number">{item.materiales?.length || 0}</td>}
-                  {tab === 'materiales' && <td>{item.unidadCompra}</td>}
-                  {tab === 'materiales' && <td>{item.unidadFabricacion}</td>}
-                  {tab === 'materiales' && <td className="cell-number">{item.factorConversion}</td>}
+                  {tab === 'materiales' && <td>{item.unidadCompra || '-'}</td>}
+                  {tab === 'materiales' && <td>{item.unidadFabricacion || '-'}</td>}
+                  {tab === 'materiales' && <td className="cell-number">{item.factorConversion ?? 0}</td>}
                   <td className="cell-number" style={{ color: tab === 'materiales' && item.stock <= item.stockMinimo ? 'var(--danger)' : 'inherit' }}>
-                    {item.stock}
+                    {item.stock ?? 0}
                   </td>
-                  {tab === 'materiales' && <td className="cell-number">{item.stockMinimo}</td>}
-                  <td className="cell-number">${(tab === 'materiales' ? item.precioCompra : item.precioVenta).toLocaleString()}</td>
+                  {tab === 'materiales' && <td className="cell-number">{item.stockMinimo ?? 0}</td>}
+                  <td className="cell-number">
+                    ${(() => {
+                      const precio = tab === 'materiales' ? item.precioCompra : item.precioVenta
+                      return (precio ?? 0).toLocaleString('es-CL')
+                    })()}
+                  </td>
                   <td>
                     <span className={`badge-minimal ${item.activo ? 'badge-success' : 'badge-secondary'}`}>
                       {item.activo ? 'Activo' : 'Inactivo'}
