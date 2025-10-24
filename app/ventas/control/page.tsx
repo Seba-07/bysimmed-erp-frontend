@@ -79,6 +79,7 @@ export default function ControlVentas() {
   const [numeroGenerado, setNumeroGenerado] = useState<string>('')
   const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoCotizacion[]>([])
   const [tasaCambio, setTasaCambio] = useState<number>(900)
+  const [tipoProductoFiltro, setTipoProductoFiltro] = useState<'modelo' | 'componente'>('modelo')
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -151,7 +152,15 @@ export default function ControlVentas() {
 
   const openModal = (type: 'cotizacion' | 'orden', data?: any) => {
     setModalType(type)
-    setFormData(data || {})
+
+    // Si es una nueva cotización, auto-llenar la fecha de solicitud con la fecha actual
+    if (type === 'cotizacion' && !data) {
+      const today = new Date().toISOString().split('T')[0]
+      setFormData({ fechaSolicitud: today, moneda: 'CLP' })
+    } else {
+      setFormData(data || {})
+    }
+
     setNumeroGenerado('')
     setProductosSeleccionados(data?.productos || [])
     setShowModal(true)
@@ -573,37 +582,74 @@ export default function ControlVentas() {
                     <label>Moneda *</label>
                     <select
                       value={formData.moneda || 'CLP'}
-                      onChange={(e) => setFormData({ ...formData, moneda: e.target.value })}
+                      onChange={(e) => {
+                        const nuevaMoneda = e.target.value
+                        const monedaAnterior = formData.moneda || 'CLP'
+
+                        // Convertir precios de productos ya agregados
+                        if (productosSeleccionados.length > 0 && nuevaMoneda !== monedaAnterior) {
+                          const productosConvertidos = productosSeleccionados.map(prod => {
+                            let nuevoPrecio = prod.precioUnitario
+
+                            // De CLP a USD
+                            if (monedaAnterior === 'CLP' && nuevaMoneda === 'USD') {
+                              nuevoPrecio = prod.precioUnitario / tasaCambio
+                            }
+                            // De USD a CLP
+                            else if (monedaAnterior === 'USD' && nuevaMoneda === 'CLP') {
+                              nuevoPrecio = prod.precioUnitario * tasaCambio
+                            }
+
+                            return {
+                              ...prod,
+                              precioUnitario: nuevoPrecio,
+                              subtotal: nuevoPrecio * prod.cantidad
+                            }
+                          })
+
+                          setProductosSeleccionados(productosConvertidos)
+                        }
+
+                        setFormData({ ...formData, moneda: nuevaMoneda })
+                      }}
                       required
                     >
                       <option value="CLP">Pesos Chilenos ($)</option>
                       <option value="USD">Dólares (USD)</option>
                     </select>
+                    {formData.moneda === 'USD' && (
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Tasa de cambio: ${tasaCambio.toLocaleString()} CLP/USD
+                      </small>
+                    )}
                   </div>
                   {/* Selector de Productos del Inventario */}
                   <div className="form-group-minimal">
                     <label>Productos a Cotizar *</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'auto 2fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
-                      <select id="producto-tipo">
+                      <select
+                        id="producto-tipo"
+                        value={tipoProductoFiltro}
+                        onChange={(e) => setTipoProductoFiltro(e.target.value as 'modelo' | 'componente')}
+                      >
                         <option value="modelo">Modelo</option>
                         <option value="componente">Componente</option>
                       </select>
                       <select id="producto-selector">
                         <option value="">Selecciona un producto</option>
-                        <optgroup label="Modelos">
-                          {modelos.map(m => (
+                        {tipoProductoFiltro === 'modelo' ? (
+                          modelos.map(m => (
                             <option key={`modelo-${m._id}`} value={`modelo-${m._id}`}>
                               {m.codigo} - {m.nombre} (${m.precioVenta.toLocaleString()})
                             </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Componentes">
-                          {componentes.map(c => (
+                          ))
+                        ) : (
+                          componentes.map(c => (
                             <option key={`componente-${c._id}`} value={`componente-${c._id}`}>
                               {c.codigo} - {c.nombre} (${c.precioVenta.toLocaleString()})
                             </option>
-                          ))}
-                        </optgroup>
+                          ))
+                        )}
                       </select>
                       <input
                         type="number"
