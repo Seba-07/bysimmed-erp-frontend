@@ -9,7 +9,30 @@ interface Cliente {
   activo: boolean
 }
 
+interface Modelo {
+  _id: string
+  codigo: string
+  nombre: string
+  descripcion?: string
+  precioVenta: number
+  stock: number
+  activo: boolean
+}
+
+interface Componente {
+  _id: string
+  codigo: string
+  nombre: string
+  descripcion?: string
+  precioVenta: number
+  stock: number
+  activo: boolean
+}
+
 interface ProductoCotizacion {
+  tipo: 'modelo' | 'componente'
+  itemId: string
+  codigo: string
   nombre: string
   descripcion?: string
   cantidad: number
@@ -48,11 +71,14 @@ export default function ControlVentas() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [modelos, setModelos] = useState<Modelo[]>([])
+  const [componentes, setComponentes] = useState<Componente[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'cotizacion' | 'orden'>('cotizacion')
   const [formData, setFormData] = useState<any>({})
   const [numeroGenerado, setNumeroGenerado] = useState<string>('')
   const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoCotizacion[]>([])
+  const [tasaCambio, setTasaCambio] = useState<number>(900)
 
   const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 
@@ -62,10 +88,13 @@ export default function ControlVentas() {
 
   const loadData = async () => {
     try {
-      const [cotRes, ocRes, clientesRes] = await Promise.all([
+      const [cotRes, ocRes, clientesRes, modelosRes, componentesRes, currencyRes] = await Promise.all([
         fetch(`${API_URL}/api/ventas/cotizaciones`),
         fetch(`${API_URL}/api/ventas/ordenes-compra`),
-        fetch(`${API_URL}/api/ventas/clientes`)
+        fetch(`${API_URL}/api/ventas/clientes`),
+        fetch(`${API_URL}/api/inventario/modelos`),
+        fetch(`${API_URL}/api/inventario/componentes`),
+        fetch(`${API_URL}/api/currency/usd-clp`)
       ])
 
       if (cotRes.ok) {
@@ -81,6 +110,21 @@ export default function ControlVentas() {
       if (clientesRes.ok) {
         const data = await clientesRes.json()
         setClientes(data.filter((c: Cliente) => c.activo))
+      }
+
+      if (modelosRes.ok) {
+        const data = await modelosRes.json()
+        setModelos(data.filter((m: Modelo) => m.activo))
+      }
+
+      if (componentesRes.ok) {
+        const data = await componentesRes.json()
+        setComponentes(data.filter((c: Componente) => c.activo))
+      }
+
+      if (currencyRes.ok) {
+        const data = await currencyRes.json()
+        setTasaCambio(data.rate)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -136,16 +180,24 @@ export default function ControlVentas() {
     const method = formData._id ? 'PUT' : 'POST'
     const endpoint = formData._id ? `${url}/${formData._id}` : url
 
-    // Calcular monto total de los productos
-    const montoTotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+    // Calcular subtotal de los productos
+    const subtotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+
+    // Calcular IVA solo si es CLP
+    const moneda = formData.moneda || 'CLP'
+    const iva = moneda === 'CLP' ? subtotal * 0.19 : 0
+    const montoTotal = subtotal + iva
 
     const dataToSend = modalType === 'cotizacion'
       ? {
           ...formData,
           productos: productosSeleccionados,
+          tasaCambio: moneda === 'USD' ? tasaCambio : undefined,
+          subtotal,
+          iva,
           monto: montoTotal,
           estado: formData._id ? formData.estado : 'solicitada',
-          moneda: formData.moneda || 'CLP'
+          moneda
         }
       : formData
 
@@ -528,66 +580,78 @@ export default function ControlVentas() {
                       <option value="USD">Dólares (USD)</option>
                     </select>
                   </div>
-                  {/* Selector de Productos */}
+                  {/* Selector de Productos del Inventario */}
                   <div className="form-group-minimal">
                     <label>Productos a Cotizar *</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
-                      <input
-                        type="text"
-                        id="producto-nombre"
-                        placeholder="Nombre del producto"
-                      />
-                      <input
-                        type="text"
-                        id="producto-descripcion"
-                        placeholder="Descripción (opcional)"
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 2fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
+                      <select id="producto-tipo">
+                        <option value="modelo">Modelo</option>
+                        <option value="componente">Componente</option>
+                      </select>
+                      <select id="producto-selector">
+                        <option value="">Selecciona un producto</option>
+                        <optgroup label="Modelos">
+                          {modelos.map(m => (
+                            <option key={`modelo-${m._id}`} value={`modelo-${m._id}`}>
+                              {m.codigo} - {m.nombre} (${m.precioVenta.toLocaleString()})
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Componentes">
+                          {componentes.map(c => (
+                            <option key={`componente-${c._id}`} value={`componente-${c._id}`}>
+                              {c.codigo} - {c.nombre} (${c.precioVenta.toLocaleString()})
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
                       <input
                         type="number"
                         id="producto-cantidad"
                         placeholder="Cantidad"
                         min="1"
-                      />
-                      <input
-                        type="number"
-                        id="producto-precio"
-                        placeholder="Precio unitario"
-                        min="0"
-                        step="0.01"
+                        defaultValue="1"
                       />
                       <button
                         type="button"
                         className="btn-minimal btn-primary-minimal"
                         onClick={() => {
-                          const nombreInput = document.getElementById('producto-nombre') as HTMLInputElement
-                          const descripcionInput = document.getElementById('producto-descripcion') as HTMLInputElement
-                          const cantidadInput = document.getElementById('producto-cantidad') as HTMLInputElement
-                          const precioInput = document.getElementById('producto-precio') as HTMLInputElement
+                          const selectorEl = document.getElementById('producto-selector') as HTMLSelectElement
+                          const cantidadEl = document.getElementById('producto-cantidad') as HTMLInputElement
+                          const selectedValue = selectorEl.value
+                          const cantidad = parseInt(cantidadEl.value)
 
-                          const nombre = nombreInput.value.trim()
-                          const descripcion = descripcionInput.value.trim()
-                          const cantidad = parseInt(cantidadInput.value)
-                          const precio = parseFloat(precioInput.value)
-
-                          if (!nombre || !cantidad || cantidad < 1 || !precio || precio < 0) {
-                            alert('Completa todos los campos obligatorios con valores válidos')
+                          if (!selectedValue || !cantidad || cantidad < 1) {
+                            alert('Selecciona un producto y cantidad válida')
                             return
                           }
 
-                          const subtotal = precio * cantidad
+                          const [tipo, id] = selectedValue.split('-')
+                          const item = tipo === 'modelo'
+                            ? modelos.find(m => m._id === id)
+                            : componentes.find(c => c._id === id)
+
+                          if (!item) return
+
+                          // Convertir precio si la moneda es USD
+                          const precioEnMoneda = formData.moneda === 'USD'
+                            ? item.precioVenta / tasaCambio
+                            : item.precioVenta
+
                           const nuevoProducto: ProductoCotizacion = {
-                            nombre,
-                            descripcion: descripcion || undefined,
+                            tipo: tipo as 'modelo' | 'componente',
+                            itemId: id,
+                            codigo: item.codigo,
+                            nombre: item.nombre,
+                            descripcion: item.descripcion,
                             cantidad,
-                            precioUnitario: precio,
-                            subtotal
+                            precioUnitario: precioEnMoneda,
+                            subtotal: precioEnMoneda * cantidad
                           }
 
                           setProductosSeleccionados([...productosSeleccionados, nuevoProducto])
-                          nombreInput.value = ''
-                          descripcionInput.value = ''
-                          cantidadInput.value = ''
-                          precioInput.value = ''
+                          selectorEl.value = ''
+                          cantidadEl.value = '1'
                         }}
                       >
                         +
@@ -640,14 +704,42 @@ export default function ControlVentas() {
                             ))}
                           </tbody>
                           <tfoot>
-                            <tr style={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Total:</td>
+                            <tr>
+                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Subtotal:</td>
                               <td style={{ textAlign: 'right', padding: '0.5rem' }}>
-                                {formData.moneda === 'USD' ? '$' : '$'}
+                                {formData.moneda === 'USD' ? 'USD' : '$'}
                                 {productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0).toLocaleString()}
                               </td>
                               <td></td>
                             </tr>
+                            {formData.moneda === 'CLP' && (
+                              <tr>
+                                <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>IVA (19%):</td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  ${(productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0) * 0.19).toLocaleString()}
+                                </td>
+                                <td></td>
+                              </tr>
+                            )}
+                            <tr style={{ fontWeight: 'bold', fontSize: '1rem', borderTop: '2px solid var(--border-secondary)' }}>
+                              <td colSpan={3} style={{ textAlign: 'right', padding: '0.5rem' }}>Total:</td>
+                              <td style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                {formData.moneda === 'USD' ? 'USD' : '$'}
+                                {(() => {
+                                  const subtotal = productosSeleccionados.reduce((sum, p) => sum + p.subtotal, 0)
+                                  const iva = formData.moneda === 'CLP' ? subtotal * 0.19 : 0
+                                  return (subtotal + iva).toLocaleString()
+                                })()}
+                              </td>
+                              <td></td>
+                            </tr>
+                            {formData.moneda === 'USD' && (
+                              <tr style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                <td colSpan={5} style={{ textAlign: 'right', padding: '0.5rem' }}>
+                                  Tasa de cambio: ${tasaCambio.toLocaleString()} CLP/USD
+                                </td>
+                              </tr>
+                            )}
                           </tfoot>
                         </table>
                       </div>
