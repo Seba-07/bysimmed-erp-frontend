@@ -9,16 +9,9 @@ interface Cliente {
   activo: boolean
 }
 
-interface Modelo {
-  _id: string
-  nombre: string
-  precioUnitario: number
-  stock: number
-}
-
 interface ProductoCotizacion {
-  modeloId: string
-  nombreModelo: string
+  nombre: string
+  descripcion?: string
   cantidad: number
   precioUnitario: number
   subtotal: number
@@ -55,7 +48,6 @@ export default function ControlVentas() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
-  const [modelos, setModelos] = useState<Modelo[]>([])
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'cotizacion' | 'orden'>('cotizacion')
   const [formData, setFormData] = useState<any>({})
@@ -70,11 +62,10 @@ export default function ControlVentas() {
 
   const loadData = async () => {
     try {
-      const [cotRes, ocRes, clientesRes, modelosRes] = await Promise.all([
+      const [cotRes, ocRes, clientesRes] = await Promise.all([
         fetch(`${API_URL}/api/ventas/cotizaciones`),
         fetch(`${API_URL}/api/ventas/ordenes-compra`),
-        fetch(`${API_URL}/api/ventas/clientes`),
-        fetch(`${API_URL}/api/inventory/models`)
+        fetch(`${API_URL}/api/ventas/clientes`)
       ])
 
       if (cotRes.ok) {
@@ -90,11 +81,6 @@ export default function ControlVentas() {
       if (clientesRes.ok) {
         const data = await clientesRes.json()
         setClientes(data.filter((c: Cliente) => c.activo))
-      }
-
-      if (modelosRes.ok) {
-        const data = await modelosRes.json()
-        setModelos(data)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -545,54 +531,63 @@ export default function ControlVentas() {
                   {/* Selector de Productos */}
                   <div className="form-group-minimal">
                     <label>Productos a Cotizar *</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <select
-                        id="modelo-selector"
-                        style={{ flex: 1 }}
-                      >
-                        <option value="">Selecciona un modelo</option>
-                        {modelos.map((modelo) => (
-                          <option key={modelo._id} value={modelo._id}>
-                            {modelo.nombre} - ${modelo.precioUnitario.toLocaleString()} (Stock: {modelo.stock})
-                          </option>
-                        ))}
-                      </select>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
+                      <input
+                        type="text"
+                        id="producto-nombre"
+                        placeholder="Nombre del producto"
+                      />
+                      <input
+                        type="text"
+                        id="producto-descripcion"
+                        placeholder="Descripción (opcional)"
+                      />
                       <input
                         type="number"
-                        id="cantidad-input"
+                        id="producto-cantidad"
                         placeholder="Cantidad"
                         min="1"
-                        style={{ width: '100px' }}
+                      />
+                      <input
+                        type="number"
+                        id="producto-precio"
+                        placeholder="Precio unitario"
+                        min="0"
+                        step="0.01"
                       />
                       <button
                         type="button"
                         className="btn-minimal btn-primary-minimal"
                         onClick={() => {
-                          const selector = document.getElementById('modelo-selector') as HTMLSelectElement
-                          const cantidadInput = document.getElementById('cantidad-input') as HTMLInputElement
-                          const modeloId = selector.value
-                          const cantidad = parseInt(cantidadInput.value)
+                          const nombreInput = document.getElementById('producto-nombre') as HTMLInputElement
+                          const descripcionInput = document.getElementById('producto-descripcion') as HTMLInputElement
+                          const cantidadInput = document.getElementById('producto-cantidad') as HTMLInputElement
+                          const precioInput = document.getElementById('producto-precio') as HTMLInputElement
 
-                          if (!modeloId || !cantidad || cantidad < 1) {
-                            alert('Selecciona un modelo y cantidad válida')
+                          const nombre = nombreInput.value.trim()
+                          const descripcion = descripcionInput.value.trim()
+                          const cantidad = parseInt(cantidadInput.value)
+                          const precio = parseFloat(precioInput.value)
+
+                          if (!nombre || !cantidad || cantidad < 1 || !precio || precio < 0) {
+                            alert('Completa todos los campos obligatorios con valores válidos')
                             return
                           }
 
-                          const modelo = modelos.find(m => m._id === modeloId)
-                          if (!modelo) return
-
-                          const subtotal = modelo.precioUnitario * cantidad
+                          const subtotal = precio * cantidad
                           const nuevoProducto: ProductoCotizacion = {
-                            modeloId: modelo._id,
-                            nombreModelo: modelo.nombre,
+                            nombre,
+                            descripcion: descripcion || undefined,
                             cantidad,
-                            precioUnitario: modelo.precioUnitario,
+                            precioUnitario: precio,
                             subtotal
                           }
 
                           setProductosSeleccionados([...productosSeleccionados, nuevoProducto])
-                          selector.value = ''
+                          nombreInput.value = ''
+                          descripcionInput.value = ''
                           cantidadInput.value = ''
+                          precioInput.value = ''
                         }}
                       >
                         +
@@ -615,7 +610,14 @@ export default function ControlVentas() {
                           <tbody>
                             {productosSeleccionados.map((prod, idx) => (
                               <tr key={idx} style={{ borderBottom: '1px solid var(--border-tertiary)' }}>
-                                <td style={{ padding: '0.5rem' }}>{prod.nombreModelo}</td>
+                                <td style={{ padding: '0.5rem' }}>
+                                  <div>{prod.nombre}</div>
+                                  {prod.descripcion && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                      {prod.descripcion}
+                                    </div>
+                                  )}
+                                </td>
                                 <td style={{ textAlign: 'center', padding: '0.5rem' }}>{prod.cantidad}</td>
                                 <td style={{ textAlign: 'right', padding: '0.5rem' }}>
                                   {formData.moneda === 'USD' ? '$' : '$'}{prod.precioUnitario.toLocaleString()}

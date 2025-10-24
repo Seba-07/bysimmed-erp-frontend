@@ -29,15 +29,6 @@ export default function Sidebar() {
         { href: '/finanzas/gastos', icon: '💰', label: 'Gastos' },
         { href: '/finanzas/cuentas', icon: '🏦', label: 'Cuentas' },
       ]
-    },
-    {
-      section: 'Operaciones',
-      items: [
-        { href: '/inventario', icon: '📦', label: 'Inventario' },
-        { href: '/produccion', icon: '🏭', label: 'Producción' },
-        { href: '/ordenes', icon: '📋', label: 'Órdenes' },
-        { href: '/reposiciones', icon: '🔄', label: 'Reposiciones' },
-      ]
     }
   ]
 
