@@ -408,7 +408,7 @@ export default function Cotizaciones() {
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay-minimal" onClick={closeModal}>
-          <div className="modal-minimal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-minimal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header-minimal">
               <h2>{formData._id ? 'Editar' : 'Nueva'} Cotización</h2>
               <button className="modal-close-btn" onClick={closeModal}>×</button>
