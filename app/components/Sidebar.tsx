@@ -22,6 +22,7 @@ export default function Sidebar() {
       section: 'Ventas',
       items: [
         { href: '/ventas/clientes', icon: '👥', label: 'Clientes' },
+        { href: '/ventas/cotizaciones', icon: '📋', label: 'Cotizaciones' },
         { href: '/ventas/control', icon: '📊', label: 'Control de Ventas' },
         { href: '/ventas/registro', icon: '📝', label: 'Registro de Ventas' },
         { href: '/ventas/post-venta', icon: '🔧', label: 'Post-Venta' },
