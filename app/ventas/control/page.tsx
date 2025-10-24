@@ -160,7 +160,18 @@ export default function ControlVentas() {
       const today = new Date().toISOString().split('T')[0]
       setFormData({ fechaSolicitud: today, moneda: 'CLP' })
     } else {
-      setFormData(data || {})
+      // Convertir fechas ISO a formato YYYY-MM-DD para inputs de tipo date
+      const formattedData = { ...data }
+      if (formattedData.fechaSolicitud) {
+        formattedData.fechaSolicitud = new Date(formattedData.fechaSolicitud).toISOString().split('T')[0]
+      }
+      if (formattedData.fechaEnvio) {
+        formattedData.fechaEnvio = new Date(formattedData.fechaEnvio).toISOString().split('T')[0]
+      }
+      if (formattedData.fechaAceptacion) {
+        formattedData.fechaAceptacion = new Date(formattedData.fechaAceptacion).toISOString().split('T')[0]
+      }
+      setFormData(formattedData || {})
     }
 
     setNumeroGenerado('')
@@ -207,8 +218,12 @@ export default function ControlVentas() {
           subtotal,
           iva,
           monto: montoTotal,
-          estado: formData._id ? formData.estado : 'solicitada',
-          moneda
+          // Si es re-cotización (estado enviada al abrir modal), volver a solicitada
+          estado: formData._id && formData.estado === 'enviada' ? 'solicitada' : (formData._id ? formData.estado : 'solicitada'),
+          moneda,
+          // Limpiar fechas de envío y aceptación si es re-cotización
+          fechaEnvio: formData.estado === 'enviada' ? null : formData.fechaEnvio,
+          fechaAceptacion: formData.estado === 'enviada' ? null : formData.fechaAceptacion
         }
       : formData
 
@@ -243,24 +258,24 @@ export default function ControlVentas() {
     }
   }
 
-  const crearRecotizacion = async (cotizacion: Cotizacion) => {
+  const enviarCotizacion = async (cotizacionId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacion._id}/recotizar`, {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/api/ventas/cotizaciones/${cotizacionId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
+        body: JSON.stringify({ estado: 'enviada' })
       })
 
       if (res.ok) {
         loadData()
-        alert('Re-cotización creada exitosamente')
+        alert('Cotización enviada exitosamente')
       } else {
         const error = await res.json()
         alert(`Error: ${error.message}`)
       }
     } catch (error) {
-      console.error('Error creating re-quotation:', error)
-      alert('Error al crear re-cotización')
+      console.error('Error enviando cotización:', error)
+      alert('Error al enviar cotización')
     }
   }
 
@@ -342,19 +357,16 @@ export default function ControlVentas() {
             <tr>
               <th>N° Cotización</th>
               <th>Cliente</th>
-              <th>Fecha Solicitud</th>
-              <th>Fecha Envío</th>
-              <th>Fecha Aceptación</th>
+              <th>Fecha</th>
               <th>Estado</th>
               <th>Monto</th>
-              <th>Ciclo (días)</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {cotizaciones.length === 0 ? (
               <tr>
-                <td colSpan={9}>
+                <td colSpan={6}>
                   <div className="empty-state-minimal">
                     <p>No hay cotizaciones registradas</p>
                   </div>
@@ -362,18 +374,13 @@ export default function ControlVentas() {
               </tr>
             ) : (
               cotizaciones.map((cot) => {
-                const oc = ordenesCompra.find(o => o.numeroCotizacion === cot.numero)
-                const diasCiclo = calcularDiasCiclo(cot, oc)
-
                 return (
                   <tr key={cot._id}>
                     <td className="cell-primary">
-                      {cot.numero}{cot.numeroRecotizacion ? `.${cot.numeroRecotizacion}` : ''}
+                      {cot.numero}
                     </td>
                     <td>{cot.clienteNombre || (typeof cot.cliente === 'object' ? cot.cliente.nombre : cot.cliente)}</td>
-                    <td className="cell-date">{cot.fechaSolicitud ? new Date(cot.fechaSolicitud).toLocaleDateString() : '-'}</td>
-                    <td className="cell-date">{cot.fechaEnvio ? new Date(cot.fechaEnvio).toLocaleDateString() : '-'}</td>
-                    <td className="cell-date">{cot.fechaAceptacion ? new Date(cot.fechaAceptacion).toLocaleDateString() : '-'}</td>
+                    <td className="cell-date">{cot.fechaSolicitud ? new Date(cot.fechaSolicitud).toLocaleDateString('es-CL') : '-'}</td>
                     <td>
                       <span className={`badge-minimal ${
                         cot.estado === 'aceptada' ? 'badge-success' :
@@ -385,25 +392,46 @@ export default function ControlVentas() {
                       </span>
                     </td>
                     <td className="cell-number">
-                      {cot.monto ? `${cot.moneda === 'USD' ? 'USD' : '$'} ${cot.monto.toLocaleString()}` : '-'}
+                      {cot.monto ? `${cot.moneda === 'USD' ? 'USD' : '$'} ${cot.monto.toLocaleString('es-CL')}` : '-'}
                     </td>
-                    <td className="cell-number">{diasCiclo !== null ? `${diasCiclo} días` : '-'}</td>
                     <td>
-                      <div className="table-actions">
-                        <button
-                          className="btn-icon-minimal"
-                          onClick={() => openModal('cotizacion', cot)}
-                          title="Editar"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-icon-minimal"
-                          onClick={() => crearRecotizacion(cot)}
-                          title="Re-cotizar"
-                        >
-                          🔄
-                        </button>
+                      <div className="table-actions" style={{ gap: '0.75rem' }}>
+                        {/* Mostrar botón Editar solo si NO está enviada */}
+                        {cot.estado === 'solicitada' && (
+                          <button
+                            className="btn-icon-minimal"
+                            onClick={() => openModal('cotizacion', cot)}
+                            title="Editar"
+                            style={{ fontSize: '1.5rem' }}
+                          >
+                            ✏️
+                          </button>
+                        )}
+
+                        {/* Mostrar botón Enviar solo si está en estado solicitada */}
+                        {cot.estado === 'solicitada' && (
+                          <button
+                            className="btn-icon-minimal"
+                            onClick={() => enviarCotizacion(cot._id)}
+                            title="Enviar Cotización"
+                            style={{ fontSize: '1.5rem' }}
+                          >
+                            📧
+                          </button>
+                        )}
+
+                        {/* Mostrar botón Re-cotizar solo si ya está enviada */}
+                        {cot.estado === 'enviada' && (
+                          <button
+                            className="btn-icon-minimal"
+                            onClick={() => openModal('cotizacion', cot)}
+                            title="Re-cotizar"
+                            style={{ fontSize: '1.5rem' }}
+                          >
+                            🔄
+                          </button>
+                        )}
+
                         {cot.pdfPath ? (
                           <a
                             href={`${API_URL}/api/ventas/cotizaciones/${cot._id}/pdf`}
@@ -411,6 +439,7 @@ export default function ControlVentas() {
                             rel="noopener noreferrer"
                             className="btn-icon-minimal"
                             title="Ver PDF"
+                            style={{ fontSize: '1.5rem' }}
                           >
                             📄
                           </a>
@@ -419,6 +448,7 @@ export default function ControlVentas() {
                             className="btn-icon-minimal"
                             onClick={() => generarPDF(cot._id)}
                             title="Generar PDF"
+                            style={{ fontSize: '1.5rem' }}
                           >
                             📝
                           </button>
@@ -427,6 +457,7 @@ export default function ControlVentas() {
                           className="btn-icon-minimal danger"
                           onClick={() => handleDelete('cotizacion', cot._id)}
                           title="Eliminar"
+                          style={{ fontSize: '1.5rem' }}
                         >
                           🗑️
                         </button>
@@ -524,12 +555,15 @@ export default function ControlVentas() {
                         const clienteId = e.target.value
                         if (clienteId && !formData._id) {
                           loadNumeroForCliente(clienteId)
+                        } else if (clienteId && formData.estado === 'enviada') {
+                          // Si es re-cotización, permite cambiar cliente y regenerar número
+                          loadNumeroForCliente(clienteId)
                         } else {
                           setFormData({ ...formData, cliente: clienteId })
                         }
                       }}
                       required
-                      disabled={!!formData._id}
+                      disabled={formData._id && formData.estado !== 'enviada'}
                     >
                       <option value="">Selecciona un cliente</option>
                       {clientes.map((cliente) => (
@@ -538,9 +572,14 @@ export default function ControlVentas() {
                         </option>
                       ))}
                     </select>
-                    {formData._id && (
+                    {formData._id && formData.estado === 'solicitada' && (
                       <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
                         El cliente no se puede cambiar al editar
+                      </small>
+                    )}
+                    {formData._id && formData.estado === 'enviada' && (
+                      <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                        Puedes cambiar el cliente en una re-cotización
                       </small>
                     )}
                   </div>
